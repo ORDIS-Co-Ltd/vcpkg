@@ -8,15 +8,18 @@ if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
   endif()
   set(MPC_STATIC_FLAG -static)
 endif()
+
 include(vcpkg_common_functions)
+
+
 set(ACE_ROOT ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers)
 set(TAO_ROOT ${ACE_ROOT}/tao)
 set(ENV{ACE_ROOT} ${ACE_ROOT})
 set(ENV{TAO_ROOT} ${TAO_ROOT})
-set(QTDIR "C:\\local\\Qt\\5.12.0\\msvc2017_64")
+set(QTDIR "C:\\local\\Qt\\5.13.0\\msvc2017_64")
 set(ENV{QTDIR} ${QTDIR})
-set(ACE_SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/ace)
-set(TAO_SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/TAO/tao)
+set(ACE_SOURCE_PATH ${ACE_ROOT}/ace)
+set(TAO_SOURCE_PATH ${TAO_ROOT}/tao)
 
 set(INSTALLED_PATH ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
 if(${CMAKE_BUILD_TYPE} MATCHES "^Debug$")
@@ -27,7 +30,6 @@ set(SSL_ROOT ${INSTALLED_PATH})
 set(ENV{SSL_ROOT} ${SSL_ROOT})
 set(ENV{ZLIB_ROOT} ${INSTALLED_PATH})
 set(ENV{BOOST_ROOT} ${INSTALLED_PATH})
-set(ENV{BZIP2_ROOT} ${INSTALLED_PATH})
 
 
 vcpkg_download_distfile(ARCHIVE
@@ -37,13 +39,11 @@ vcpkg_download_distfile(ARCHIVE
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
-vcpkg_acquire_msys(MSYS_ROOT)
-set(BASH ${MSYS_ROOT}/usr/bin/bash.exe)
-set(MAKE ${MSYS_ROOT}/usr/bin/make.exe)
-
+# Acquire Perl and add it to PATH (for execution of MPC)
 vcpkg_find_acquire_program(PERL)
 get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
+
 
 if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
     message(FATAL_ERROR "ARM is currently not supported.")
@@ -79,163 +79,101 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 # Invoke mwc.pl to generate the necessary solution and project files
+#vcpkg_execute_required_process(
+#    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,boost=1,mfc=0,ace_for_tao=0,ace_inline=0,ssl=1,openssl11=0,qt5=1,zlib=1 -use_env -expand_vars
+#    WORKING_DIRECTORY ${TAO_ROOT}
+#    LOGNAME mwc-tao-${TARGET_TRIPLET}
+#)
 
-vcpkg_execute_required_process(
-    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,boost=1,mfc=0,ace_for_tao=0,ace_inline=0,ssl=1,openssl11=0,qt5=1,zlib=1 -use_env -expand_vars
-    WORKING_DIRECTORY ${TAO_ROOT}
-    LOGNAME mwc-tao-${TARGET_TRIPLET}
-)
+# Build 
+#if(NOT VCPKG_CMAKE_SYSTEM_NAME) 
+#	vcpkg_build_msbuild(PROJECT_PATH ${TAO_ROOT}/tao_ace.sln PLATFORM ${MSBUILD_PLATFORM}) 
+#endif()
 
-if(NOT VCPKG_CMAKE_SYSTEM_NAME)
-  
-  vcpkg_build_msbuild(
-    PROJECT_PATH ${TAO_ROOT}/tao_ace.sln
-    PLATFORM ${MSBUILD_PLATFORM}
-  ) 
-endif()
+#if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+#  FIND_PROGRAM(MAKE make)
+#  IF (NOT MAKE)
+#    MESSAGE(FATAL_ERROR "MAKE not found")
+#  ENDIF ()
+#  vcpkg_execute_required_process(
+#    COMMAND make
+#    WORKING_DIRECTORY ${ACE_ROOT}/ace
+#    LOGNAME make-${TARGET_TRIPLET}
+#  )
+#endif()
 
-if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  FIND_PROGRAM(MAKE make)
-  IF (NOT MAKE)
-    MESSAGE(FATAL_ERROR "MAKE not found")
-  ENDIF ()
-  vcpkg_execute_required_process(
-    COMMAND make
-    WORKING_DIRECTORY ${ACE_ROOT}/ace
-    LOGNAME make-${TARGET_TRIPLET}
-  )
-endif()
-
-# ACE itself does not define an install target, so it is not clear which
-# headers are public and which not. For the moment we install everything
-# that is in the source path and ends in .h, .inl
-function(install_ace_headers_subdirectory SOURCE_PATH RELATIVE_PATH)
-    file(GLOB HEADER_FILES ${SOURCE_PATH}/${RELATIVE_PATH}/*.h ${SOURCE_PATH}/${RELATIVE_PATH}/*.inl)
-    file(INSTALL ${HEADER_FILES} DESTINATION ${CURRENT_PACKAGES_DIR}/include/ace/${RELATIVE_PATH})
+# Install include files
+function(install_includes SOURCE_PATH SUBDIRECTORIES INCLUDE_DIR)
+	foreach(SUB_DIR ${SUBDIRECTORIES})
+		file(GLOB INCLUDE_FILES ${SOURCE_PATH}/${SUB_DIR}/*.h ${SOURCE_PATH}/${SUB_DIR}/*.inl ${SOURCE_PATH}/${SUB_DIR}/*.cpp)
+		file(INSTALL ${INCLUDE_FILES} DESTINATION ${CURRENT_PACKAGES_DIR}/include/${INCLUDE_DIR}/${SUB_DIR})
+	endforeach()
 endfunction()
 
-# We manually install header found in the ace directory because in that case
-# we are supposed to install also *cpp files, see ACE_wrappers\debian\libace-dev.install file
-file(GLOB HEADER_FILES ${SOURCE_PATH}/*.h ${SOURCE_PATH}/*.inl ${SOURCE_PATH}/*.cpp)
-file(INSTALL ${HEADER_FILES} DESTINATION ${CURRENT_PACKAGES_DIR}/include/ace/)
+set(ACE_INCLUDE_FOLDERS "." "Compression" "Compression/rle" "ETCL" "QoS" "Monitor_Control" "os_include" "os_include/arpa" "os_include/net" "os_include/netinet" "os_include/sys")
+install_includes(${ACE_SOURCE_PATH} "${ACE_INCLUDE_FOLDERS}" "ace")
 
-# For TAO
-function(install_tao_headers_subdirectory SOURCE_PATH RELATIVE_PATH)
-    file(GLOB HEADER_FILES ${SOURCE_PATH}/${RELATIVE_PATH}/*.h ${SOURCE_PATH}/${RELATIVE_PATH}/*.inl ${SOURCE_PATH}/${RELATIVE_PATH}/*.cpp)
-    file(INSTALL ${HEADER_FILES} DESTINATION ${CURRENT_PACKAGES_DIR}/include/tao/${RELATIVE_PATH})
+set(TAO_INCLUDE_FOLDERS "." "AnyTypeCode" "BiDir_GIOP" "CodecFactory" "Codeset" "Compression" "Compression/bzip2" "Compression/lzo" "Compression/rle" "Compression/zlib"
+    "CSD_Framework" "CSD_ThreadPool" "DiffServPolicy" "Dynamic_TP" "DynamicAny" "DynamicInterface" "EndpointPolicy" "EndpointPolicy" "ETCL" "FlResource" "FoxResource"
+	"IFR_Client" "ImR_Client" "IORInterceptor" "IORManipulation" "IORTable" "Messaging" "Monitor" "ObjRefTemplate" "PI" "PI_Server" "PortableServer" "QtResource"
+	"RTCORBA" "RTPortableServer" "RTScheduling" "SmartProxies" "Strategies" "TkResource" "TransportCurrent" "TypeCodeFactory" "Utils" "Valuetype" "XtResource" "ZIOP")
+install_includes(${TAO_SOURCE_PATH} "${TAO_INCLUDE_FOLDERS}" "tao")
+
+set(ORBSVCS_INCLUDE_FOLDERS "." "AV" "Concurrency" "CosEvent" "ESF" "FaultTolerance" "FtRtEvent/ClientORB" "FtRtEvent/EventChannel" "FtRtEvent/Utils" "HTIOP" "IFRService"
+    "LifeCycle" "LoadBalancing" "Log" "Naming" "Naming/FaultTolerant" "Notify" "Notify/Any" "Notify/MonitorControl" "Notify/MonitorControlExt" "Notify/Sequence"
+	"Notify/Structured" "PortableGroup" "Property" "Sched" "Security" "SSLIOP" "Time" "Trader")
+install_includes(${TAO_ROOT}/orbsvcs/orbsvcs "${ORBSVCS_INCLUDE_FOLDERS}" "orbsvcs")
+
+
+# Install libraries
+function(install_libraries SOURCE_PATH LIBRARIES)
+	foreach(LIBRARY ${LIBRARIES})
+		set(LIB_PATH ${SOURCE_PATH}/lib/)
+		
+		if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
+			# Install the DLL files
+			file(INSTALL ${LIB_PATH}/${LIBRARY}d.dll DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
+			file(INSTALL ${LIB_PATH}/${LIBRARY}.dll DESTINATION ${CURRENT_PACKAGES_DIR}/bin)
+		endif()
+		# Install the lib files
+		file(INSTALL ${LIB_PATH}/${LIB_PREFIX}${LIBRARY}${DLL_DECORATOR}${LIB_DEBUG_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib)
+		file(INSTALL ${LIB_PATH}/${LIB_PREFIX}${LIBRARY}${DLL_DECORATOR}${LIB_RELEASE_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/lib)
+	endforeach()
 endfunction()
 
-function(install_orbsvcs_headers_subdirectory SOURCE_PATH RELATIVE_PATH)
-    file(GLOB HEADER_FILES ${SOURCE_PATH}/${RELATIVE_PATH}/*.h ${SOURCE_PATH}/${RELATIVE_PATH}/*.inl ${SOURCE_PATH}/${RELATIVE_PATH}/*.cpp)
-    file(INSTALL ${HEADER_FILES} DESTINATION ${CURRENT_PACKAGES_DIR}/include/orbsvcs/${RELATIVE_PATH})
-endfunction()
+set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_HTBP" "ACE_INet"
+    "ACE_INet_SSL" "ACE_Monitor_Control" "ACE_QoS" "ACE_QtReactor" "ACE_RLECompression" "ACE_RMCast"
+	"ACE_SSL" "ACE_TMCast" "ACEXML" "ACEXML_Parser" "Kokyu" "TAO" "TAO_AnyTypeCode" "TAO_Async_ImR_Client_IDL"
+	"TAO_Async_IORTable" "TAO_AV" "TAO_BiDirGIOP" "TAO_Catior_i" "TAO_CodecFactory" "TAO_Codeset" 
+	"TAO_Compression" "TAO_CosConcurrency" "TAO_CosConcurrency_Serv" "TAO_CosConcurrency_Skel" "TAO_CosEvent"
+	"TAO_CosEvent_Serv"  "TAO_CosEvent_Skel" "TAO_CosLifeCycle" "TAO_CosLifeCycle_Skel" "TAO_CosLoadBalancing"
+	"TAO_CosNaming" "TAO_CosNaming_Serv" "TAO_CosNaming_Skel" "TAO_CosNotification" "TAO_CosNotification_MC"
+	"TAO_CosNotification_Serv" "TAO_CosNotification_Skel" "TAO_CosNotification_Persist" "TAO_CosProperty"
+	"TAO_CosProperty_Serv" "TAO_CosProperty_Skel" "TAO_CosTime" "TAO_CosTime_Serv" "TAO_CosTrading"
+	"TAO_CosTrading_Serv" "TAO_CosTrading_Skel" "TAO_CSD_Framework" "TAO_CSD_ThreadPool" "TAO_DiffServPolicy"
+	"TAO_DsEventLogAdmin" "TAO_DsEventLogAdmin_Serv" "TAO_DsEventLogAdmin_Skel" "TAO_DsLogAdmin"
+	"TAO_DsLogAdmin_Serv" "TAO_DsLogAdmin_Skel" "TAO_DsNotifyLogAdmin" "TAO_DsNotifyLogAdmin_Serv"
+	"TAO_DsNotifyLogAdmin_Skel" "TAO_Dynamic_TP" "TAO_DynamicAny" "TAO_DynamicInterface" "TAO_EndpointPolicy"
+	"TAO_ETCL" "TAO_FT_Naming_Serv" "TAO_FT_ServerORB" "TAO_FtNaming" "TAO_FtNamingReplication" 
+	"TAO_FTORB_Utils" "TAO_FTRT_ClientORB" "TAO_FTRT_EventChannel" "TAO_FtRtEvent" "TAO_HTIOP" "TAO_IDL_BE"
+	"TAO_IDL_FE" "TAO_IFR_BE" "TAO_IFR_Client" "TAO_IFR_Client_skel" "TAO_ImR_Activator_IDL" "TAO_ImR_Client"
+	"TAO_ImR_Locator_IDL" "TAO_IORInterceptor" "TAO_IORManip" "TAO_IORTable" "TAO_Messaging" "TAO_Monitor"
+	"TAO_Notify_Service" "TAO_ObjRefTemplate" "TAO_PI" "TAO_PI_Server" "TAO_PortableGroup" "TAO_PortableServer"
+	"TAO_QtResource" "TAO_RLECompressor" "TAO_RT_Notification" "TAO_RTCORBA" "TAO_RTEvent" "TAO_RTEvent_Skel"
+	"TAO_RTEventLogAdmin" "TAO_RTEventLogAdmin_Skel" "TAO_RTPortableServer" "TAO_RTSched" "TAO_RTScheduler"
+	"TAO_Security" "TAO_SmartProxies" "TAO_SSLIOP" "TAO_Strategies" "TAO_Svc_Utils" "TAO_TC" "TAO_TC_IIOP"
+	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" "TAO_ZIOP" "TAO_ZlibCompressor")
+install_libraries(${ACE_ROOT} "${ACE_TAO_LIBRARIES}")
 
-set(EXECUTABLE_SUFFIX ".exe")
-if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
-set(EXECUTABLE_SUFFIX "")
-endif()
 
+# Install executables
 function(install_tao_executables SOURCE_PATH EXE_FILE)
-	set(TEMP_EXE_DIR ${ACE_ROOT}/temp)
-	#file(MAKE_DIRECTORY ${TEMP_EXE_DIR})
-	file(COPY ${SOURCE_PATH}/${EXE_FILE}${EXECUTABLE_SUFFIX} DESTINATION ${TEMP_EXE_DIR})
-	file(INSTALL ${TEMP_EXE_DIR}/${EXE_FILE}${EXECUTABLE_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace-tao)
+	set(EXECUTABLE_SUFFIX ".exe")
+	if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+		set(EXECUTABLE_SUFFIX "")
+	endif()
+	file(INSTALL ${ACE_ROOT}/bin/${EXE_FILE}${EXECUTABLE_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace-tao)
 endfunction()
-
-
-file(GLOB HEADER_FILES ${ACE_SOURCE_PATH}/*.h ${ACE_SOURCE_PATH}/*.inl ${ACE_SOURCE_PATH}/*.cpp)
-file(INSTALL ${HEADER_FILES} DESTINATION ${CURRENT_PACKAGES_DIR}/include/ace/)
-
-# Install headers in subdirectory
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "Compression")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "Compression/rle")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "ETCL")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "QoS")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "Monitor_Control")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "os_include")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "os_include/arpa")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "os_include/net")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "os_include/netinet")
-install_ace_headers_subdirectory(${ACE_SOURCE_PATH} "os_include/sys")
-
-file(GLOB HEADER_FILES ${TAO_SOURCE_PATH}/*.h ${TAO_SOURCE_PATH}/*.inl ${TAO_SOURCE_PATH}/*.cpp)
-file(INSTALL ${HEADER_FILES} DESTINATION ${CURRENT_PACKAGES_DIR}/include/tao/)
-
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "AnyTypeCode")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "BiDir_GIOP")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "CodecFactory")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Codeset")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Compression")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Compression/bzip2")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Compression/lzo")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Compression/rle")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Compression/zlib")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "CSD_Framework")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "CSD_ThreadPool")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "DiffServPolicy")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Dynamic_TP")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "DynamicAny")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "DynamicInterface")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "EndpointPolicy")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "ETCL")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "FlResource")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "FoxResource")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "IFR_Client")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "ImR_Client")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "IORInterceptor")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "IORManipulation")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "IORTable")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Messaging")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Monitor")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "ObjRefTemplate")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "PI")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "PI_Server")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "PortableServer")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "QtResource")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "RTCORBA")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "RTPortableServer")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "RTScheduling")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "SmartProxies")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Strategies")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "TkResource")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "TransportCurrent")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "TypeCodeFactory")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Utils")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "Valuetype")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "XtResource")
-install_tao_headers_subdirectory(${TAO_SOURCE_PATH} "ZIOP")
-
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "") 
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "AV")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Concurrency")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "CosEvent")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "ESF")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Event")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "FaultTolerance")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "FtRtEvent/ClientORB")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "FtRtEvent/EventChannel")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "FtRtEvent/Utils")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "HTIOP")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "IFRService")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "LifeCycle")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "LoadBalancing")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Log")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Naming")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Naming/FaultTolerant")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Notify")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Notify/Any")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Notify/MonitorControl")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Notify/MonitorControlExt")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Notify/Sequence")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Notify/Structured")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "PortableGroup")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Property")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Sched")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Security")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "SSLIOP")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Time")
-install_orbsvcs_headers_subdirectory(${TAO_ROOT}/orbsvcs/orbsvcs "Trader")
-
 
 install_tao_executables(${ACE_ROOT}/bin "ace_gperf")
 install_tao_executables(${ACE_ROOT}/bin "tao_catior")
@@ -247,159 +185,9 @@ install_tao_executables(${ACE_ROOT}/bin "tao_nsdel")
 install_tao_executables(${ACE_ROOT}/bin "tao_nsgroup")
 install_tao_executables(${ACE_ROOT}/bin "tao_nslist")
 
-
-
-# Install the libraries
-function(install_ace_library SOURCE_PATH ACE_LIBRARY)
-    set(LIB_PATH ${SOURCE_PATH}/lib/)
-    if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
-        # Install the DLL files
-        file(INSTALL
-            ${LIB_PATH}/${ACE_LIBRARY}d.dll
-            DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin
-        )
-        file(INSTALL
-            ${LIB_PATH}/${ACE_LIBRARY}.dll
-            DESTINATION ${CURRENT_PACKAGES_DIR}/bin
-        )
-    endif()
-
-    # Install the lib files
-    file(INSTALL
-        ${LIB_PATH}/${LIB_PREFIX}${ACE_LIBRARY}${DLL_DECORATOR}${LIB_DEBUG_SUFFIX}
-        DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib
-    )
-
-    file(INSTALL
-        ${LIB_PATH}/${LIB_PREFIX}${ACE_LIBRARY}${DLL_DECORATOR}${LIB_RELEASE_SUFFIX}
-        DESTINATION ${CURRENT_PACKAGES_DIR}/lib
-    )
-endfunction()
-
-install_ace_library(${ACE_ROOT} "ACE")
-install_ace_library(${ACE_ROOT} "ACE_Compression")
-install_ace_library(${ACE_ROOT} "ACE_ETCL")
-install_ace_library(${ACE_ROOT} "ACE_ETCL_Parser")
-install_ace_library(${ACE_ROOT} "ACE_HTBP")	
-install_ace_library(${ACE_ROOT} "ACE_INet")
-install_ace_library(${ACE_ROOT} "ACE_INet_SSL")
-install_ace_library(${ACE_ROOT} "ACE_Monitor_Control")
-if(NOT VCPKG_CMAKE_SYSTEM_NAME)
-  install_ace_library(${ACE_ROOT} "ACE_QoS")
-endif()
-install_ace_library(${ACE_ROOT} "ACE_QtReactor")
-install_ace_library(${ACE_ROOT} "ACE_RLECompression")
-install_ace_library(${ACE_ROOT} "ACE_RMCast")
-install_ace_library(${ACE_ROOT} "ACE_SSL")
-install_ace_library(${ACE_ROOT} "ACE_TMCast")
-install_ace_library(${ACE_ROOT} "ACEXML")
-install_ace_library(${ACE_ROOT} "ACEXML_Parser")
-#install_ace_library(${ACE_ROOT} "ACEXML_XML_Svc_Conf_Parser")
-install_ace_library(${ACE_ROOT} "Kokyu")
-install_ace_library(${ACE_ROOT} "TAO")
-install_ace_library(${ACE_ROOT} "TAO_AnyTypeCode")
-install_ace_library(${ACE_ROOT} "TAO_Async_ImR_Client_IDL")
-install_ace_library(${ACE_ROOT} "TAO_Async_IORTable")
-install_ace_library(${ACE_ROOT} "TAO_AV")
-install_ace_library(${ACE_ROOT} "TAO_BiDirGIOP")
-install_ace_library(${ACE_ROOT} "TAO_Catior_i")
-install_ace_library(${ACE_ROOT} "TAO_CodecFactory")
-install_ace_library(${ACE_ROOT} "TAO_Codeset")
-install_ace_library(${ACE_ROOT} "TAO_Compression")
-install_ace_library(${ACE_ROOT} "TAO_CosConcurrency")
-install_ace_library(${ACE_ROOT} "TAO_CosConcurrency_Serv")
-install_ace_library(${ACE_ROOT} "TAO_CosConcurrency_Skel")
-install_ace_library(${ACE_ROOT} "TAO_CosEvent")
-install_ace_library(${ACE_ROOT} "TAO_CosEvent_Serv")
-install_ace_library(${ACE_ROOT} "TAO_CosEvent_Skel")
-install_ace_library(${ACE_ROOT} "TAO_CosLifeCycle")
-install_ace_library(${ACE_ROOT} "TAO_CosLifeCycle_Skel")
-install_ace_library(${ACE_ROOT} "TAO_CosLoadBalancing")
-install_ace_library(${ACE_ROOT} "TAO_CosNaming")
-install_ace_library(${ACE_ROOT} "TAO_CosNaming_Serv")
-install_ace_library(${ACE_ROOT} "TAO_CosNaming_Skel")
-install_ace_library(${ACE_ROOT} "TAO_CosNotification")
-install_ace_library(${ACE_ROOT} "TAO_CosNotification_MC")
-install_ace_library(${ACE_ROOT} "TAO_CosNotification_Serv")
-install_ace_library(${ACE_ROOT} "TAO_CosNotification_Skel")
-install_ace_library(${ACE_ROOT} "TAO_CosNotification_Persist")
-install_ace_library(${ACE_ROOT} "TAO_CosProperty")
-install_ace_library(${ACE_ROOT} "TAO_CosProperty_Serv")
-install_ace_library(${ACE_ROOT} "TAO_CosProperty_Skel")
-install_ace_library(${ACE_ROOT} "TAO_CosTime")
-install_ace_library(${ACE_ROOT} "TAO_CosTime_Serv")
-install_ace_library(${ACE_ROOT} "TAO_CosTrading")
-install_ace_library(${ACE_ROOT} "TAO_CosTrading_Serv")
-install_ace_library(${ACE_ROOT} "TAO_CosTrading_Skel")
-install_ace_library(${ACE_ROOT} "TAO_CSD_Framework")
-install_ace_library(${ACE_ROOT} "TAO_CSD_ThreadPool")
-install_ace_library(${ACE_ROOT} "TAO_DiffServPolicy")
-install_ace_library(${ACE_ROOT} "TAO_DsEventLogAdmin")
-install_ace_library(${ACE_ROOT} "TAO_DsEventLogAdmin_Serv")
-install_ace_library(${ACE_ROOT} "TAO_DsEventLogAdmin_Skel")
-install_ace_library(${ACE_ROOT} "TAO_DsLogAdmin")
-install_ace_library(${ACE_ROOT} "TAO_DsLogAdmin_Serv")
-install_ace_library(${ACE_ROOT} "TAO_DsLogAdmin_Skel")
-install_ace_library(${ACE_ROOT} "TAO_DsNotifyLogAdmin")
-install_ace_library(${ACE_ROOT} "TAO_DsNotifyLogAdmin_Serv")
-install_ace_library(${ACE_ROOT} "TAO_DsNotifyLogAdmin_Skel")
-install_ace_library(${ACE_ROOT} "TAO_Dynamic_TP")
-install_ace_library(${ACE_ROOT} "TAO_DynamicAny")
-install_ace_library(${ACE_ROOT} "TAO_DynamicInterface")
-install_ace_library(${ACE_ROOT} "TAO_EndpointPolicy")
-install_ace_library(${ACE_ROOT} "TAO_ETCL")
-install_ace_library(${ACE_ROOT} "TAO_FT_Naming_Serv")
-install_ace_library(${ACE_ROOT} "TAO_FT_ServerORB")
-install_ace_library(${ACE_ROOT} "TAO_FtNaming")
-install_ace_library(${ACE_ROOT} "TAO_FtNamingReplication")
-install_ace_library(${ACE_ROOT} "TAO_FTORB_Utils")
-install_ace_library(${ACE_ROOT} "TAO_FTRT_ClientORB")
-install_ace_library(${ACE_ROOT} "TAO_FTRT_EventChannel")
-install_ace_library(${ACE_ROOT} "TAO_FtRtEvent")
-install_ace_library(${ACE_ROOT} "TAO_HTIOP")
-install_ace_library(${ACE_ROOT} "TAO_IDL_BE")
-install_ace_library(${ACE_ROOT} "TAO_IDL_FE")
-install_ace_library(${ACE_ROOT} "TAO_IFR_BE")
-install_ace_library(${ACE_ROOT} "TAO_IFR_Client")
-install_ace_library(${ACE_ROOT} "TAO_IFR_Client_skel")
-install_ace_library(${ACE_ROOT} "TAO_ImR_Activator_IDL")
-install_ace_library(${ACE_ROOT} "TAO_ImR_Client")
-install_ace_library(${ACE_ROOT} "TAO_ImR_Locator_IDL")
-install_ace_library(${ACE_ROOT} "TAO_IORInterceptor")
-install_ace_library(${ACE_ROOT} "TAO_IORManip")
-install_ace_library(${ACE_ROOT} "TAO_IORTable")
-install_ace_library(${ACE_ROOT} "TAO_Messaging")
-install_ace_library(${ACE_ROOT} "TAO_Monitor")
-install_ace_library(${ACE_ROOT} "TAO_Notify_Service")
-install_ace_library(${ACE_ROOT} "TAO_ObjRefTemplate")
-install_ace_library(${ACE_ROOT} "TAO_PI")
-install_ace_library(${ACE_ROOT} "TAO_PI_Server")
-install_ace_library(${ACE_ROOT} "TAO_PortableGroup")
-install_ace_library(${ACE_ROOT} "TAO_PortableServer")
-install_ace_library(${ACE_ROOT} "TAO_QtResource")
-install_ace_library(${ACE_ROOT} "TAO_RLECompressor")
-install_ace_library(${ACE_ROOT} "TAO_RT_Notification")
-install_ace_library(${ACE_ROOT} "TAO_RTCORBA")
-install_ace_library(${ACE_ROOT} "TAO_RTEvent")
-install_ace_library(${ACE_ROOT} "TAO_RTEvent_Skel")
-install_ace_library(${ACE_ROOT} "TAO_RTEventLogAdmin")
-install_ace_library(${ACE_ROOT} "TAO_RTEventLogAdmin_Skel")
-install_ace_library(${ACE_ROOT} "TAO_RTPortableServer")
-install_ace_library(${ACE_ROOT} "TAO_RTSched")
-install_ace_library(${ACE_ROOT} "TAO_RTScheduler")
-install_ace_library(${ACE_ROOT} "TAO_Security")
-install_ace_library(${ACE_ROOT} "TAO_SmartProxies")
-install_ace_library(${ACE_ROOT} "TAO_SSLIOP")
-install_ace_library(${ACE_ROOT} "TAO_Strategies")
-install_ace_library(${ACE_ROOT} "TAO_Svc_Utils")
-install_ace_library(${ACE_ROOT} "TAO_TC")
-install_ace_library(${ACE_ROOT} "TAO_TC_IIOP")
-install_ace_library(${ACE_ROOT} "TAO_TypeCodeFactory")
-install_ace_library(${ACE_ROOT} "TAO_Utils")
-install_ace_library(${ACE_ROOT} "TAO_Valuetype")
-install_ace_library(${ACE_ROOT} "TAO_ZIOP")
-install_ace_library(${ACE_ROOT} "TAO_ZlibCompressor")
-
+file(INSTALL ${ACE_ROOT}/lib/ACEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace-tao)
+file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_FEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace-tao)
+file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_BEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace-tao)
 
 # Handle copyright
 file(COPY ${ACE_ROOT}/COPYING DESTINATION ${CURRENT_PACKAGES_DIR}/share/ace-tao)
