@@ -1,0 +1,4 @@
+Source: ace-tao
+Version: 2.5.5
+Description: The ACE ORB
+Build-Depends: openssl

@@ -1,0 +1,4 @@
+Source: omniorb
+Version: 4.2.3
+Description: omniORB
+Build-Depends: openssl
