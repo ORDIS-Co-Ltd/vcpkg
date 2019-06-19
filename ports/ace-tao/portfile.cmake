@@ -79,28 +79,28 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 # Invoke mwc.pl to generate the necessary solution and project files
-#vcpkg_execute_required_process(
-#    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,boost=1,mfc=0,ace_for_tao=0,ace_inline=0,ssl=1,openssl11=0,qt5=1,zlib=1 -use_env -expand_vars
-#    WORKING_DIRECTORY ${TAO_ROOT}
-#    LOGNAME mwc-tao-${TARGET_TRIPLET}
-#)
+vcpkg_execute_required_process(
+    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,boost=1,mfc=0,ace_for_tao=0,ace_inline=0,ssl=1,openssl11=0,qt5=1,zlib=1 -use_env -expand_vars
+    WORKING_DIRECTORY ${TAO_ROOT}
+    LOGNAME mwc-tao-${TARGET_TRIPLET}
+)
 
 # Build 
-#if(NOT VCPKG_CMAKE_SYSTEM_NAME) 
-#	vcpkg_build_msbuild(PROJECT_PATH ${TAO_ROOT}/tao_ace.sln PLATFORM ${MSBUILD_PLATFORM}) 
-#endif()
+if(NOT VCPKG_CMAKE_SYSTEM_NAME) 
+	vcpkg_build_msbuild(PROJECT_PATH ${TAO_ROOT}/tao_ace.sln PLATFORM ${MSBUILD_PLATFORM}) 
+endif()
 
-#if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
-#  FIND_PROGRAM(MAKE make)
-#  IF (NOT MAKE)
-#    MESSAGE(FATAL_ERROR "MAKE not found")
-#  ENDIF ()
-#  vcpkg_execute_required_process(
-#    COMMAND make
-#    WORKING_DIRECTORY ${ACE_ROOT}/ace
-#    LOGNAME make-${TARGET_TRIPLET}
-#  )
-#endif()
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  FIND_PROGRAM(MAKE make)
+  IF (NOT MAKE)
+    MESSAGE(FATAL_ERROR "MAKE not found")
+  ENDIF ()
+  vcpkg_execute_required_process(
+    COMMAND make
+    WORKING_DIRECTORY ${ACE_ROOT}/ace
+    LOGNAME make-${TARGET_TRIPLET}
+  )
+endif()
 
 # Install include files
 function(install_includes SOURCE_PATH SUBDIRECTORIES INCLUDE_DIR)
