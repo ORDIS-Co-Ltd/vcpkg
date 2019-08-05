@@ -97,11 +97,7 @@ vcpkg_execute_required_process(
 
 # Build 
 if(NOT VCPKG_CMAKE_SYSTEM_NAME) 
-	vcpkg_build_msbuild(
-		PROJECT_PATH ${TAO_ROOT}/tao_ace.sln 
-		PLATFORM ${MSBUILD_PLATFORM}
-		OPTIONS_DEBUG "/LIBPATH:${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib"
-		)
+	vcpkg_build_msbuild(PROJECT_PATH ${TAO_ROOT}/tao_ace.sln PLATFORM ${MSBUILD_PLATFORM})
 endif()
 
 if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
