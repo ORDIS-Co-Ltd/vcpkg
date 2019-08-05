@@ -17,7 +17,9 @@ set(TAO_ROOT ${ACE_ROOT}/tao)
 set(ENV{ACE_ROOT} ${ACE_ROOT})
 set(ENV{TAO_ROOT} ${TAO_ROOT})
 set(QTDIR ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
+#set(QTDIR "C:\\local\\Qt\\5.12.0\\msvc2017_64")
 set(ENV{QTDIR} ${QTDIR})
+
 set(ACE_SOURCE_PATH ${ACE_ROOT}/ace)
 set(TAO_SOURCE_PATH ${TAO_ROOT}/tao)
 
@@ -43,6 +45,14 @@ vcpkg_extract_source_archive(${ARCHIVE})
 vcpkg_find_acquire_program(PERL)
 get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
+
+set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
+FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
+STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
+
+STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
+
+FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
 
 
 if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
@@ -87,7 +97,11 @@ vcpkg_execute_required_process(
 
 # Build 
 if(NOT VCPKG_CMAKE_SYSTEM_NAME) 
-	vcpkg_build_msbuild(PROJECT_PATH ${TAO_ROOT}/tao_ace.sln PLATFORM ${MSBUILD_PLATFORM}) 
+	vcpkg_build_msbuild(
+		PROJECT_PATH ${TAO_ROOT}/tao_ace.sln 
+		PLATFORM ${MSBUILD_PLATFORM}
+		OPTIONS_DEBUG "/LIBPATH:${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib"
+		)
 endif()
 
 if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
