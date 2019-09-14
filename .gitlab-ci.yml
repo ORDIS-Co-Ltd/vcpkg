@@ -26,6 +26,9 @@ build-linux:
   tags:
     - gcc
   variables:
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: 1
+
   stage: build
   script:
   - ./bootstrap-vcpkg.sh
