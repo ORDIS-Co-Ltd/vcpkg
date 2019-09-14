@@ -30,9 +30,6 @@ build-linux:
     GIT_STRATEGY: fetch
   stage: build
   script:
-  - mkdir build && cd "$_"
-  #- GCC_CXX_WARNINGS='-Werror -Wall -Wextra -Wpedantic'
-  #- CC=gcc CXX=g++ CXXFLAGS="$GCC_CXX_WARNINGS" cmake -DCMAKE_BUILD_TYPE=Debug ../website
   - ./bootstrap-vcpkg.sh
   - export VCPKG_DEFAULT_TRIPLET="x64-linux"
   - ./vcpkg install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
