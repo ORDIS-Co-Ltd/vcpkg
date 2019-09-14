@@ -16,7 +16,6 @@ build-windows:
     key: vcpkg_msvc142_x64-windows_dynamic
     paths:
     - downloads
-    - packages
     - installed
   after_script:
   except:
@@ -36,7 +35,6 @@ build-linux:
     key: vcpkg_gcc_x64-linux_dynamic
     paths:
     - downloads
-    - packages
     - installed
   after_script:
   except:
