@@ -3,24 +3,17 @@ stages:
 build-windows:
   tags:
     - msvc142
-    #- vcpkg_msvc142
   variables:
     GIT_STRATEGY: fetch
-    #GIT_SUBMODULE_STRATEGY: recursive
   stage: build
   script:
-  - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
-  #- New-Item -Path 'C:\Development' -ItemType Directory; Set-Location -Path 'C:\Development'
-  #- git clone git@gitlab.intra.ordis.co.th:ordis/reposync-service.git
-  #- New-Item -Path 'build' -ItemType Directory; Set-Location -Path build
-  #- $Env:path = '$Env:path;C:\Program Files\CMake\bin;C:\Windows\System32\WindowsPowerShell\v1.0'
-  #- 'cmake -G "Visual Studio 16 2019" -A x64 --config Debug  ../ -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake'
-  - Set-Location -Path vcpkg
-  - .\bootstrap-vcpkg.bat
+    - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
+    - Set-Location -Path vcpkg
+    - .\bootstrap-vcpkg.bat
   cache:
     key: vs2019_build_dev
-   paths:
-   - vcpkg
+    paths:
+    - vcpkg
   after_script:
   except:
     - tags
