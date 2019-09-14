@@ -12,7 +12,7 @@ build-windows:
     - $Env:VCPKG_DEFAULT_TRIPLET="x64-windows"
     - .\vcpkg.exe install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt ace-tao
   cache:
-    key: vs2019_build_dev
+    key: vcpkg_msvc142_x64-windows_dynamic
     paths:
     - downloads
     - packages
