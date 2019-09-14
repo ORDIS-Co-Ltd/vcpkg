@@ -8,7 +8,6 @@ build-windows:
   stage: build
   script:
     - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
-    - Set-Location -Path vcpkg
     - .\bootstrap-vcpkg.bat
   cache:
     key: vs2019_build_dev
