@@ -11,6 +11,7 @@ build-windows:
     - .\bootstrap-vcpkg.bat
     - $Env:VCPKG_DEFAULT_TRIPLET="x64-windows"
     - .\vcpkg.exe install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
+    - .\vcpkg.exe export curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt --7zip
   cache:
     key: vcpkg_msvc142_x64-windows_dynamic
     paths:
