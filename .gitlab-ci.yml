@@ -10,13 +10,12 @@ build-windows:
     - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
     - .\bootstrap-vcpkg.bat
     - $Env:VCPKG_DEFAULT_TRIPLET="x64-windows"
-    - .\vcpkg.exe install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
-    - .\vcpkg.exe export curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt --7zip
+    - .\vcpkg.exe install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt #qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg 
+    - .\vcpkg.exe export curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt --7zip #qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg --7zip
   cache:
     key: vcpkg_msvc142_x64-windows_dynamic
     paths:
     - downloads
-    - packages
     - installed
   after_script:
   except:
@@ -27,8 +26,13 @@ build-linux:
   tags:
     - gcc
   variables:
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: 1
+
   stage: build
   script:
+  - scl enable sclo-git212 bash
+  - scl enable devtoolset-7 bash
   - ./bootstrap-vcpkg.sh
   - export VCPKG_DEFAULT_TRIPLET="x64-linux"
   - ./vcpkg install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
@@ -36,7 +40,6 @@ build-linux:
     key: vcpkg_gcc_x64-linux_dynamic
     paths:
     - downloads
-    - packages
     - installed
   after_script:
   except:
