@@ -9,7 +9,7 @@ build-windows:
   script:
     - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
     - $physicalBuildPath = Get-Location
-    - subst Q: $physicalBuildPath
+    - 'subst Q: $physicalBuildPath'
     - Set-Location Q:\
     - .\bootstrap-vcpkg.bat
     - $Env:VCPKG_DEFAULT_TRIPLET="x64-windows"
