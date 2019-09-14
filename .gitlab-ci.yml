@@ -9,12 +9,14 @@ build-windows:
   script:
     - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
     - .\bootstrap-vcpkg.bat
-    - $Env:VCPKG_DEFAULT_TRIPLET=x64-windows
+    - $Env:VCPKG_DEFAULT_TRIPLET="x64-windows"
     - .\vcpkg.exe install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt ace-tao
   cache:
     key: vs2019_build_dev
     paths:
-    - vcpkg
+    - downloads
+    - packages
+    - installed
   after_script:
   except:
     - tags
