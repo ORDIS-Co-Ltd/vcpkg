@@ -27,25 +27,25 @@ build-windows:
     - tags
 
 
-build-linux:
-  tags:
-    - gcc
-  variables:
-    GIT_STRATEGY: fetch
-    GIT_DEPTH: 1
+#build-linux:
+#  tags:
+#    - gcc
+#  variables:
+#    GIT_STRATEGY: fetch
+#    GIT_DEPTH: 1
 
-  stage: build
-  script:
-  - scl enable sclo-git212 bash
-  - scl enable devtoolset-7 bash
-  - ./bootstrap-vcpkg.sh
-  - export VCPKG_DEFAULT_TRIPLET="x64-linux"
-  - ./vcpkg install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
-  cache:
-    key: vcpkg_gcc_x64-linux_dynamic
-    paths:
-    - downloads
-    - installed
-  after_script:
-  except:
-    - tags
+#  stage: build
+#  script:
+#  - scl enable sclo-git212 bash
+#  - scl enable devtoolset-7 bash
+#  - ./bootstrap-vcpkg.sh
+#  - export VCPKG_DEFAULT_TRIPLET="x64-linux"
+#  - ./vcpkg install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
+#  cache:
+#    key: vcpkg_gcc_x64-linux_dynamic
+#    paths:
+#    - downloads
+#    - installed
+#  after_script:
+#  except:
+#    - tags
