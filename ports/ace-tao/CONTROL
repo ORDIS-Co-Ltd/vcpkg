@@ -2,3 +2,18 @@ Source: ace-tao
 Version: 2.5.5
 Description: The ACE ORB
 Build-Depends: openssl,qt5-base
+
+Feature: zlib
+Build-Depends: zlib
+Description: With zlib support
+
+Feature: ssl
+Build-Depends: openssl
+Description: With SSL support
+
+Feature: qt5
+Build-Depends: qt5-base
+Description: For QtReactor
+
+
+

@@ -46,12 +46,8 @@ vcpkg_find_acquire_program(PERL)
 get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
 
-set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
-FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
-STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/bin/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
-SET(QT5_CORE_MPB_DATA ${NEW_QT5_CORE_MPB_DATA})
-STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
-FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
+
+
 
 
 if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
@@ -67,6 +63,9 @@ endif()
 if(NOT VCPKG_CMAKE_SYSTEM_NAME)
   set(LIB_RELEASE_SUFFIX .lib)
   set(LIB_DEBUG_SUFFIX d.lib)
+  set(DLL_RELEASE_SUFFIX .dll)
+  set(DLL_DEBUG_SUFFIX d.dll)
+  set(LIB_PREFIX)
   if(VCPKG_PLATFORM_TOOLSET MATCHES "v142")
     set(SOLUTION_TYPE vs2019)
   elseif(VCPKG_PLATFORM_TOOLSET MATCHES "v141")
@@ -81,15 +80,35 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(DLL_DECORATOR)
   set(LIB_RELEASE_SUFFIX .a)
   set(LIB_DEBUG_SUFFIX .a)
+  set(DLL_RELEASE_SUFFIX)
+  set(DLL_DEBUG_SUFFIX)
   set(LIB_PREFIX lib)
   set(SOLUTION_TYPE gnuace)
   file(WRITE ${ACE_SOURCE_PATH}/config.h "#include \"ace/config-linux.h\"")
   file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)include/makeinclude/platform_linux.GNU")
 endif()
 
+set(FEATURE_FLAGS "")
+if("zlib" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",zlib=1")    
+endif()
+if("ssl" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",ssl=1")    
+endif()
+if("qt5" IN_LIST FEATURES)
+    # Patch QT5 template file
+    set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
+    FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
+    STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/bin/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
+    SET(QT5_CORE_MPB_DATA ${NEW_QT5_CORE_MPB_DATA})
+    STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
+    FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
+    string(APPEND FEATURE_FLAGS ",qt5=1")
+endif()
+
 # Invoke mwc.pl to generate the necessary solution and project files
 vcpkg_execute_required_process(
-    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,boost=1,mfc=0,ace_for_tao=0,ace_inline=0,ssl=1,openssl11=0,qt5=1,zlib=1 -use_env -expand_vars
+    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,ace_for_tao=0,ace_inline=0,openssl11=0${FEATURE_FLAGS} -use_env -expand_vars
     WORKING_DIRECTORY ${TAO_ROOT}
     LOGNAME mwc-tao-${TARGET_TRIPLET}
 )
@@ -106,7 +125,7 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
   ENDIF ()
   vcpkg_execute_required_process(
     COMMAND make
-    WORKING_DIRECTORY ${ACE_ROOT}/ace
+    WORKING_DIRECTORY ${TAO_ROOT}
     LOGNAME make-${TARGET_TRIPLET}
   )
 endif()
@@ -141,8 +160,8 @@ function(install_libraries SOURCE_PATH LIBRARIES)
 		
 		if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
 			# Install the DLL files
-			file(INSTALL ${LIB_PATH}/${LIBRARY}d.dll DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
-			file(INSTALL ${LIB_PATH}/${LIBRARY}.dll DESTINATION ${CURRENT_PACKAGES_DIR}/bin)
+			file(INSTALL ${LIB_PATH}/${LIBRARY}${DLL_DEBUG_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
+			file(INSTALL ${LIB_PATH}/${LIBRARY}${DLL_RELEASE_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/bin)
 		endif()
 		# Install the lib files
 		file(INSTALL ${LIB_PATH}/${LIB_PREFIX}${LIBRARY}${DLL_DECORATOR}${LIB_DEBUG_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib)
