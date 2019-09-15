@@ -30,6 +30,7 @@ build-windows:
   cache:
     key: vcpkg_msvc142_$TRIPLET
     paths:
+    - packages
     - downloads
     - installed
   except:
