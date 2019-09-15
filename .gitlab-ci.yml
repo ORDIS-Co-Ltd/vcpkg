@@ -20,10 +20,10 @@ build-windows:
     - .\bootstrap-vcpkg.bat -disableMetrics
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
     - .\vcpkg.exe upgrade --no-dry-run
-    - .\vcpkg.exe install boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt # 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana platform-folders podofo qwt x-plane pugixml qt5 --recurse
+    - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana # platform-folders podofo qwt x-plane pugixml qt5 --recurse
     - Set-Location $physicalBuildPath
   after_script:
-    - .\vcpkg.exe export boost curl[openssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt --recurse --ifw --output=vcpkg-$TRIPLET
+    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana --ifw --output=vcpkg-$TRIPLET
     - Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
     - 'net use /delete J:'
     - 'subst /d Q:'
