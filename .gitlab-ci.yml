@@ -19,8 +19,8 @@ build-windows:
     - .\bootstrap-vcpkg.bat -disableMetrics
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
     - .\vcpkg.exe upgrade --no-dry-run
-    - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana pugixml platform-folders podofo libharu # qt5 qwt x-plane --recurse
-    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana pugixml platform-folders podofo libharu --zip --output=vcpkg-$TRIPLET
+    - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cppcms cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu # qt5 qwt x-plane --recurse
+    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cppcms cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu --zip --output=vcpkg-$TRIPLET
     - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
     #- Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
     - Copy-Item "vcpkg-x64-windows.7z" -Destination "J:\vcpkg" -Force
@@ -49,7 +49,7 @@ build-linux:
   script:
   - ./bootstrap-vcpkg.sh
   - export VCPKG_DEFAULT_TRIPLET=$TRIPLET
-  - ./vcpkg install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3]
+  - ./vcpkg install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cppcms cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu --recurse
   cache:
     key: vcpkg_gcc_$TRIPLET
     paths:
