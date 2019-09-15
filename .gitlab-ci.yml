@@ -6,6 +6,8 @@ build-windows:
   variables:
     GIT_STRATEGY: fetch
   stage: build
+  before_script:
+    - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
   script:
     - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
     - $physicalBuildPath = Get-Location
@@ -14,8 +16,12 @@ build-windows:
     - .\bootstrap-vcpkg.bat
     - $Env:VCPKG_DEFAULT_TRIPLET="x64-windows"
     - .\vcpkg.exe install boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit libuuid nana platform-folders podofo qwt x-plane pugixml --recurse
-    - .\vcpkg.exe export boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit libuuid nana platform-folders podofo qwt x-plane pugixml  --7zip
+    - .\vcpkg.exe export boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit libuuid nana platform-folders podofo qwt x-plane pugixml  --ifw --output=vcpkg
     - Set-Location $physicalBuildPath
+    - Copy-Item "vcpkg-ifw-installer.exe" -Destination "J:\vcpkg" -Force
+  after_script:
+    - 'net use /delete J:'
+
   cache:
     key: vcpkg_msvc142_x64-windows_dynamic
     paths:
