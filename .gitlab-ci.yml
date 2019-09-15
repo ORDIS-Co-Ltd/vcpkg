@@ -10,7 +10,6 @@ build-windows:
     PACKAGES: jsoncpp zlib
   stage: build
   before_script:
-    - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
     - 'subst Q: (Get-Location); echo ok'
   script:
     - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
@@ -21,11 +20,13 @@ build-windows:
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
     - .\vcpkg.exe upgrade --no-dry-run
     - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana # platform-folders podofo qwt x-plane pugixml qt5 --recurse
+    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana --7zip --output=vcpkg-$TRIPLET
+    - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
+    #- Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
+    - Copy-Item "vcpkg-x64-windows.7z" -Destination "J:\vcpkg" -Force
+    - 'net use /delete J:'
     - Set-Location $physicalBuildPath
   after_script:
-    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana --ifw --output=vcpkg-$TRIPLET
-    - Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
-    - 'net use /delete J:'
     - 'subst /d Q:'
   cache:
     key: vcpkg_msvc142_$TRIPLET
@@ -46,16 +47,15 @@ build-windows:
 
 #  stage: build
 #  script:
-#  - scl enable sclo-git212 bash
-#  - scl enable devtoolset-7 bash
 #  - ./bootstrap-vcpkg.sh
 #  - export VCPKG_DEFAULT_TRIPLET="x64-linux"
 #  - ./vcpkg install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
 #  cache:
-#    key: vcpkg_gcc_x64-linux_dynamic
+#    key: vcpkg_gcc_$TRIPLET
 #    paths:
-#    - downloads
-#    - installed
+    - packages
+    - downloads
+    - installed
 #  after_script:
 #  except:
 #    - tags
