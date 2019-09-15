@@ -32,8 +32,6 @@ build-windows:
     paths:
     - downloads
     - installed
-  after_script:
-    - 'subst /d Q:'
   except:
     - tags
 
