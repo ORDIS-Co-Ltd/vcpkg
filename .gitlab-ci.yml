@@ -16,7 +16,7 @@ build-windows:
     - $physicalBuildPath = Get-Location
     #- 'subst Q: $physicalBuildPath; echo ok'
     - Set-Location Q:\
-    - .\bootstrap-vcpkg.bat
+    - .\bootstrap-vcpkg.bat -disableMetrics
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
     - .\vcpkg.exe upgrade --no-dry-run
     - '.\vcpkg.exe install $PACKAGES --recurse'
