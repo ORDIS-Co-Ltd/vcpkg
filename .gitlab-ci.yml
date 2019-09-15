@@ -7,7 +7,7 @@ build-windows:
     GIT_STRATEGY: fetch
     TRIPLET: "x64-windows"
     #PACKAGES: "boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3]" # libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana platform-folders podofo qwt x-plane pugixml qt5
-    PACKAGES: "jsoncpp zlib"
+    PACKAGES: jsoncpp zlib
   stage: build
   before_script:
     - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
