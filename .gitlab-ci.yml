@@ -19,10 +19,10 @@ build-windows:
     - .\bootstrap-vcpkg.bat
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
     - .\vcpkg.exe upgrade --no-dry-run
-    - .\vcpkg.exe install $PACKAGES --recurse
+    - '.\vcpkg.exe install $PACKAGES --recurse'
     - Set-Location $physicalBuildPath
   after_script:
-    - .\vcpkg.exe export $PACKAGES --ifw --output=vcpkg-$TRIPLET
+    - '.\vcpkg.exe export $PACKAGES --ifw --output=vcpkg-$TRIPLET'
     - Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
     - 'net use /delete J:'
     - 'subst /d Q:'
