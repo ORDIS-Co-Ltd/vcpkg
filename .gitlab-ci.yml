@@ -20,7 +20,7 @@ build-windows:
     - .\bootstrap-vcpkg.bat -disableMetrics
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
     - .\vcpkg.exe upgrade --no-dry-run
-    - .\vcpkg.exe install boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana platform-folders podofo qwt x-plane pugixml qt5 --recurse
+    - .\vcpkg.exe install zlib # boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana platform-folders podofo qwt x-plane pugixml qt5 --recurse
     - Set-Location $physicalBuildPath
   after_script:
     - .\vcpkg.exe export zlib --ifw --output=vcpkg-$TRIPLET
