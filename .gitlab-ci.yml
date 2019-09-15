@@ -13,7 +13,7 @@ build-windows:
     - Set-Location Q:\
     - .\bootstrap-vcpkg.bat
     - $Env:VCPKG_DEFAULT_TRIPLET="x64-windows"
-    - .\vcpkg.exe install boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit libuuid nana platform-folders podofo qwt x-plane pugixml 
+    - .\vcpkg.exe install boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit libuuid nana platform-folders podofo qwt x-plane pugixml --recurse
     - .\vcpkg.exe export boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt qt5-base qt5-declarative qt5-quickcontrols qt5-quickcontrols2 qt5-svg 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit libuuid nana platform-folders podofo qwt x-plane pugixml  --7zip
     - Set-Location $physicalBuildPath
   cache:
