@@ -19,7 +19,9 @@ build-windows:
     - .\bootstrap-vcpkg.bat -disableMetrics
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
     - .\vcpkg.exe upgrade --no-dry-run
-    - '.\vcpkg.exe install $PACKAGES --recurse'
+    - $pckgs = $PACKAGES
+    - Write-Output $pckgs
+    - '.\vcpkg.exe install $pckgs --recurse'
     - Set-Location $physicalBuildPath
   after_script:
     - '.\vcpkg.exe export $PACKAGES --ifw --output=vcpkg-$TRIPLET'
