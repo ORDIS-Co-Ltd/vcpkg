@@ -38,24 +38,24 @@ build-windows:
     - tags
 
 
-#build-linux:
-#  tags:
-#    - gcc
-#  variables:
-#    GIT_STRATEGY: fetch
-#    GIT_DEPTH: 1
-
-#  stage: build
-#  script:
-#  - ./bootstrap-vcpkg.sh
-#  - export VCPKG_DEFAULT_TRIPLET="x64-linux"
-#  - ./vcpkg install curl[ssl,winssl] curlpp jsoncpp libgit2 libpq libpqxx openssl-windows openssl soci[odbc,postgresql,sqlite3] libmariadb thrift grpc wt
-#  cache:
-#    key: vcpkg_gcc_$TRIPLET
-#    paths:
-#    - packages
-#    - downloads
-#    - installed
-#  after_script:
-#  except:
-#    - tags
+build-linux:
+  tags:
+    - gcc
+    - linux
+  variables:
+    GIT_STRATEGY: fetch
+    TRIPLET: "x64-linux"
+  stage: build
+  script:
+  - ./bootstrap-vcpkg.sh
+  - export VCPKG_DEFAULT_TRIPLET=$TRIPLET
+  - ./vcpkg install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3]
+  cache:
+    key: vcpkg_gcc_$TRIPLET
+    paths:
+    - packages
+    - downloads
+    - installed
+  after_script:
+  except:
+    - tags
