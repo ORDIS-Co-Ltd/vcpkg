@@ -16,12 +16,11 @@ set(ACE_ROOT ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers)
 set(TAO_ROOT ${ACE_ROOT}/tao)
 set(ENV{ACE_ROOT} ${ACE_ROOT})
 set(ENV{TAO_ROOT} ${TAO_ROOT})
-set(QTDIR ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
-#set(QTDIR "C:\\local\\Qt\\5.12.0\\msvc2017_64")
-set(ENV{QTDIR} ${QTDIR})
-
 set(ACE_SOURCE_PATH ${ACE_ROOT}/ace)
 set(TAO_SOURCE_PATH ${TAO_ROOT}/tao)
+
+set(QTDIR ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
+set(ENV{QTDIR} ${QTDIR})
 
 set(INSTALLED_PATH ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
 if(${CMAKE_BUILD_TYPE} MATCHES "^Debug$")
@@ -38,6 +37,8 @@ vcpkg_download_distfile(ARCHIVE
     URLS "http://github.com/DOCGroup/ACE_TAO/releases/download/ACE%2BTAO-6_5_5/ACE+TAO-src-6.5.5.zip"
     FILENAME ACE+TAO-src-6.5.5.zip
     SHA512 888295877d498b85168cea7b199aba4805b920e9e9f3e65865e3190e5b00b1574c3b941b4a76bc7ef4c5d21d3dc03865cbc6f5286fea4c37643390fb211c76a2
+    PATCHES
+        qcoreapplication.patch
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
@@ -45,9 +46,6 @@ vcpkg_extract_source_archive(${ARCHIVE})
 vcpkg_find_acquire_program(PERL)
 get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
-
-
-
 
 
 if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
@@ -101,7 +99,7 @@ if("qt5" IN_LIST FEATURES)
     FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
     STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/bin/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
     SET(QT5_CORE_MPB_DATA ${NEW_QT5_CORE_MPB_DATA})
-    STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib ${VCPKG_ROOT_DIR}installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
+    STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
     FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
     string(APPEND FEATURE_FLAGS ",qt5=1")
 endif()
