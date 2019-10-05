@@ -18,11 +18,12 @@ build-windows:
     - Set-Location Q:\
     - .\bootstrap-vcpkg.bat -disableMetrics
     - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
+    - .\vcpkg uninstall ace-tao
     - .\vcpkg.exe upgrade --no-dry-run
-    - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane --recurse
+    - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane --recurse #ace-tao[zlib,ssl,qt5]
     - Set-Location $physicalBuildPath
     - .\vcpkg.exe install ace-tao[zlib,ssl,qt5] --recurse
-    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane ace-tao[zlib,ssl,qt5] --zip --output=vcpkg-$TRIPLET
+    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane  --zip --output=vcpkg-$TRIPLET #ace-tao[zlib,ssl,qt5]
     - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
     #- Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
     - Copy-Item "vcpkg-x64-windows.zip" -Destination "J:\vcpkg" -Force
