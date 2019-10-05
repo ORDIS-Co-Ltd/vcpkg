@@ -1,7 +1,18 @@
-diff --git a/ace/QtReactor/QtReactor.cpp b/ACE/ace/QtReactor/QtReactor.cpp
+diff --git a/bin/MakeProjectCreator/config/ace_qt5reactor.mpb b/bin/MakeProjectCreator/config/ace_qt5reactor.mpb
+index 4357a3779de..956ad99772d 100644
+--- a/bin/MakeProjectCreator/config/ace_qt5reactor.mpb
++++ b/bin/MakeProjectCreator/config/ace_qt5reactor.mpb
+@@ -1,5 +1,5 @@
+ // -*- MPC -*-
+-project : acelib, ace_qt5, qt5_widgets {
++project : acelib, ace_qt5 {
+   requires += ace_qt5reactor
+   after    += ACE_Qt5Reactor
+   libs     += ACE_QtReactor
+diff --git a/ace/QtReactor/QtReactor.cpp b/ace/QtReactor/QtReactor.cpp
 index ac9fab0c903..6dff0591fdd 100644
 --- a/ace/QtReactor/QtReactor.cpp
-+++ b/ACE/ace/QtReactor/QtReactor.cpp
++++ b/ace/QtReactor/QtReactor.cpp
 @@ -6,7 +6,7 @@ ACE_ALLOC_HOOK_DEFINE (ACE_QtReactor)
  
  // Must be called with lock held
@@ -29,10 +40,10 @@ index ac9fab0c903..6dff0591fdd 100644
  {
    // reparent QSocketNotifiers and QTimer
    qapp_ = qapp ;
-diff --git a/ace/QtReactor/QtReactor.h b/ACE/ace/QtReactor/QtReactor.h
+diff --git a/ace/QtReactor/QtReactor.h b/ace/QtReactor/QtReactor.h
 index 6bafe3c7f4c..4f128507a1a 100644
 --- a/ace/QtReactor/QtReactor.h
-+++ b/ACE/ace/QtReactor/QtReactor.h
++++ b/ace/QtReactor/QtReactor.h
 @@ -29,10 +29,12 @@
  
  // QT toolkit specific includes.
