@@ -29,8 +29,8 @@ Build-Depends: atlmfc
 Description: MFC support
 
 Feature: xml
-Build-Depends: xerces-c
-Description: XML support
+Build-Depends: xerces-c[xmlch_wchar,icu]
+Description: XML support with xerces-c
 
 
 
