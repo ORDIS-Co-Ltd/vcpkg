@@ -1,16 +1,10 @@
-if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
-    message(FATAL_ERROR "${PORT} does not currently support UWP")
-endif()
+#if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
+#    message(FATAL_ERROR "${PORT} does not currently support UWP")
+#endif()
 
 include(vcpkg_common_functions)
 
-if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
-    message(FATAL_ERROR "ARM is currently not supported.")
-elseif (TRIPLET_SYSTEM_ARCH MATCHES "x86")
-    set(MSBUILD_PLATFORM "Win32")
-else ()
-    set(MSBUILD_PLATFORM ${TRIPLET_SYSTEM_ARCH})
-endif()
+
 
 set(ACE_ROOT ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers)
 set(TAO_ROOT ${ACE_ROOT}/tao)
@@ -42,6 +36,8 @@ vcpkg_apply_patches(
     PATCHES
         "${CMAKE_CURRENT_LIST_DIR}/qtcoreapplication.patch"
         "${CMAKE_CURRENT_LIST_DIR}/bzip2.patch"
+        "${CMAKE_CURRENT_LIST_DIR}/mpc-arm.patch"
+        "${CMAKE_CURRENT_LIST_DIR}/stacktrace-arm.patch"
 )
 
 
@@ -58,6 +54,11 @@ if(NOT VCPKG_CMAKE_SYSTEM_NAME)
 elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
     file(WRITE ${ACE_SOURCE_PATH}/config.h "#include \"ace/config-linux.h\"")
     file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)/include/makeinclude/platform_linux.GNU")
+elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    file(WRITE ${ACE_SOURCE_PATH}/config.h "#include \"ace/config-macosx.h\"")
+    file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)/include/makeinclude/platform_macosx.GNU")
+elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
+    message(FATAL_ERROR "${PORT} does not currently support UWP.")
 endif()
 
 if(NOT VCPKG_CMAKE_SYSTEM_NAME)
@@ -133,6 +134,18 @@ string(PREPEND ACE_FEATURES ",")
 #   Invoke mwc to generate solution / make files
 #
 ###################################################
+
+
+if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
+    set(MSBUILD_PLATFORM "ARM")
+elseif (TRIPLET_SYSTEM_ARCH MATCHES "arm64")
+    set(MSBUILD_PLATFORM "ARM64")
+elseif (TRIPLET_SYSTEM_ARCH MATCHES "x86")
+    set(MSBUILD_PLATFORM "Win32")
+else ()
+    set(MSBUILD_PLATFORM ${TRIPLET_SYSTEM_ARCH})
+endif()
+
 
 # Acquire Perl and add it to PATH (for execution of MPC)
 vcpkg_find_acquire_program(PERL)
