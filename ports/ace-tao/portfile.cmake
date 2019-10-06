@@ -34,7 +34,8 @@ vcpkg_download_distfile(ARCHIVE
     FILENAME ACE+TAO-src-6.5.5.zip
     SHA512 888295877d498b85168cea7b199aba4805b920e9e9f3e65865e3190e5b00b1574c3b941b4a76bc7ef4c5d21d3dc03865cbc6f5286fea4c37643390fb211c76a2
     PATCHES
-        qcoreapplication.patch
+        qtcoreapplication.patch
+        bzip2.patch
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
@@ -169,7 +170,6 @@ install_includes(${TAO_ROOT}/orbsvcs/orbsvcs "${ORBSVCS_INCLUDE_FOLDERS}" "orbsv
 function(install_libraries SOURCE_PATH LIBRARIES)
 	foreach(LIBRARY ${LIBRARIES})
 		set(LIB_PATH ${SOURCE_PATH}/lib/)
-		
 		if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
 			# Install the DLL files
 			file(INSTALL ${LIB_PATH}/${LIBRARY}${DLL_DEBUG_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
@@ -199,10 +199,10 @@ set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_
 	"TAO_IDL_FE" "TAO_IFR_BE" "TAO_IFR_Client" "TAO_IFR_Client_skel" "TAO_ImR_Activator_IDL" "TAO_ImR_Client"
 	"TAO_ImR_Locator_IDL" "TAO_IORInterceptor" "TAO_IORManip" "TAO_IORTable" "TAO_Messaging" "TAO_Monitor"
 	"TAO_Notify_Service" "TAO_ObjRefTemplate" "TAO_PI" "TAO_PI_Server" "TAO_PortableGroup" "TAO_PortableServer"
-	 "TAO_RLECompressor" "TAO_RT_Notification" "TAO_RTCORBA" "TAO_RTEvent" "TAO_RTEvent_Skel"
+	"TAO_RLECompressor" "TAO_RT_Notification" "TAO_RTCORBA" "TAO_RTEvent" "TAO_RTEvent_Skel"
 	"TAO_RTEventLogAdmin" "TAO_RTEventLogAdmin_Skel" "TAO_RTPortableServer" "TAO_RTSched" "TAO_RTScheduler"
 	"TAO_Security" "TAO_SmartProxies"  "TAO_Strategies" "TAO_Svc_Utils" "TAO_TC" "TAO_TC_IIOP"
-	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" )
+	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" "TAO_ZIOP")
 install_libraries(${ACE_ROOT} "${ACE_TAO_LIBRARIES}")
 
 
@@ -210,11 +210,23 @@ if("ssl" IN_LIST FEATURES)
 list(APPEND ACE_TAO_LIBRARIES "ACE_INet_SSL" "ACE_SSL" "TAO_SSLIOP")
 endif()   
 if("zlib" IN_LIST FEATURES)
-list(APPEND ACE_TAO_LIBRARIES "TAO_ZIOP" "TAO_ZlibCompressor")
+list(APPEND ACE_TAO_LIBRARIES "TAO_ZlibCompressor")
 endif()   
 if("qt5" IN_LIST FEATURES)
 list(APPEND ACE_TAO_LIBRARIES "ACE_QtReactor" "TAO_QtResource")
-endif()   
+endif()
+if("lzo" IN_LIST FEATURES)
+
+endif()
+if("bzip2" IN_LIST FEATURES)
+
+endif()
+if("mfc" IN_LIST FEATURES)
+
+endif()
+if("xml" IN_LIST FEATURES)
+
+endif()
 
 
 # Install executables
