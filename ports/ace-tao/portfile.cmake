@@ -2,15 +2,7 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
     message(FATAL_ERROR "${PORT} does not currently support UWP")
 endif()
 
-if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
-  if(NOT VCPKG_CMAKE_SYSTEM_NAME)
-    set(DLL_DECORATOR s)
-  endif()
-  set(MPC_STATIC_FLAG -static)
-endif()
-
 include(vcpkg_common_functions)
-
 
 set(ACE_ROOT ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers)
 set(TAO_ROOT ${ACE_ROOT}/tao)
@@ -25,7 +17,6 @@ set(INSTALLED_PATH ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug)
 endif()
 
 set(ENV{BOOST_ROOT} ${INSTALLED_PATH})
-
 
 vcpkg_download_distfile(ARCHIVE
     URLS "http://github.com/DOCGroup/ACE_TAO/releases/download/ACE%2BTAO-6_5_6/ACE+TAO-src-6.5.6.tar.gz"
@@ -62,6 +53,9 @@ if(NOT VCPKG_CMAKE_SYSTEM_NAME)
   set(DLL_RELEASE_SUFFIX .dll)
   set(DLL_DEBUG_SUFFIX d.dll)
   set(LIB_PREFIX)
+  if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
+    set(DLL_DECORATOR s)
+  endif()
   if(VCPKG_PLATFORM_TOOLSET MATCHES "v142")
     set(SOLUTION_TYPE vs2019)
   elseif(VCPKG_PLATFORM_TOOLSET MATCHES "v141")
@@ -102,6 +96,9 @@ if("bzip2" IN_LIST FEATURES)
     string(APPEND FEATURE_FLAGS ",bzip2=1")
 endif()
 if("mfc" IN_LIST FEATURES)
+    if(VCPKG_CMAKE_SYSTEM_NAME)
+        message(FATAL_ERROR "MFC is not available on platforms other than Windows.")
+    endif()
     string(APPEND FEATURE_FLAGS ",mfc=1")
 endif()
 if("xml" IN_LIST FEATURES)
@@ -118,6 +115,11 @@ if("qt5" IN_LIST FEATURES)
     FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
     set(ENV{QTDIR} ${INSTALLED_PATH})
     string(APPEND FEATURE_FLAGS ",qt5=1")
+endif()
+
+
+if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
+  set(MPC_STATIC_FLAG -static)
 endif()
 
 # Invoke mwc.pl to generate the necessary solution and project files
@@ -189,6 +191,7 @@ set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_
 	"TAO_Compression" "TAO_CosConcurrency" "TAO_CosConcurrency_Serv" "TAO_CosConcurrency_Skel" "TAO_CosEvent"
 	"TAO_CosEvent_Serv"  "TAO_CosEvent_Skel" "TAO_CosLifeCycle" "TAO_CosLifeCycle_Skel" "TAO_CosLoadBalancing"
 	"TAO_CosNaming" "TAO_CosNaming_Serv" "TAO_CosNaming_Skel" "TAO_CosNotification" "TAO_CosNotification_MC"
+    "TAO_CosNotification_MC_Ext"
 	"TAO_CosNotification_Serv" "TAO_CosNotification_Skel" "TAO_CosNotification_Persist" "TAO_CosProperty"
 	"TAO_CosProperty_Serv" "TAO_CosProperty_Skel" "TAO_CosTime" "TAO_CosTime_Serv" "TAO_CosTrading"
 	"TAO_CosTrading_Serv" "TAO_CosTrading_Skel" "TAO_CSD_Framework" "TAO_CSD_ThreadPool" "TAO_DiffServPolicy"
