@@ -23,7 +23,7 @@ build-windows:
     - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane --recurse
     - Set-Location $physicalBuildPath
     #- .\vcpkg.exe install ace-tao[zlib,ssl,qt5,mfc,bzip2,lzo,xml] --recurse
-    - .\vcpkg.exe install ace-tao[bzip2] --recurse
+    - .\vcpkg.exe install ace-tao[zlib,bzip2,ssl,qt5,mfc,lzo,xml] --recurse
     - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane --zip --output=vcpkg-$TRIPLET #ace-tao[zlib,ssl,qt5]
     - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
     #- Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
