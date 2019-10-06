@@ -140,10 +140,10 @@ get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
 
 if(BUILD_TAO)
-    set(WORKSPACE "tao_ace")
+    set(WORKSPACE "TAO_ACE")
     set(WORKING_DIR ${TAO_ROOT})
 else()
-    set(WORKSPACE "ace")
+    set(WORKSPACE "ACE")
     set(WORKING_DIR ${ACE_ROOT})
 endif()
 
