@@ -1,0 +1,43 @@
+stages:
+  - build
+build-windows:
+  tags:
+    - msvc142
+  variables:
+    GIT_STRATEGY: fetch
+    TRIPLET: "x64-windows"
+    #PACKAGES: "boost curl[ssl,openssl,winssl,non-http,ssh,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3]" # libmariadb thrift grpc wt 7zip capnproto cppcms cppcodec cpprestsdk freetds[openssl] google-cloud-cpp icu imgui json-spirit nana platform-folders podofo qwt x-plane pugixml qt5
+    PACKAGES: jsoncpp zlib
+  stage: build
+  before_script:
+    - 'subst Q: (Get-Location); echo ok'
+  script:
+    - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
+    - $physicalBuildPath = Get-Location
+    #- 'subst Q: $physicalBuildPath; echo ok'
+    - Set-Location Q:\
+    - .\bootstrap-vcpkg.bat -disableMetrics
+    - $Env:VCPKG_DEFAULT_TRIPLET=$TRIPLET
+    - .\vcpkg remove ace-tao
+    - .\vcpkg.exe upgrade --no-dry-run
+    - .\vcpkg.exe install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane --recurse
+    - Set-Location $physicalBuildPath
+    #- .\vcpkg.exe install ace-tao[zlib,ssl,qt5,mfc,bzip2,lzo,xml] --recurse
+    - .\vcpkg.exe install ace-tao[zlib,bzip2,ssl,qt5,mfc,lzo,xml] --recurse
+    - .\vcpkg.exe export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane --zip --output=vcpkg-$TRIPLET #ace-tao[zlib,ssl,qt5]
+    - 'net use J: \\FILESRV\Shared /user:jenkins_user 3Edcft67; echo ok'
+    #- Copy-Item "vcpkg-$TRIPLET-ifw-installer.exe" -Destination "J:\vcpkg" -Force
+    - Copy-Item "vcpkg-x64-windows.zip" -Destination "J:\vcpkg" -Force
+    - 'net use /delete J:'
+  after_script:
+    - 'subst /d Q:'
+  cache:
+    key: vcpkg_msvc142_$TRIPLET
+    paths:
+    - packages
+    - downloads
+    - installed
+  except:
+    - tags
+
+
