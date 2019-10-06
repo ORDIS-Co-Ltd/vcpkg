@@ -16,12 +16,11 @@ set(ACE_ROOT ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers)
 set(TAO_ROOT ${ACE_ROOT}/tao)
 set(ENV{ACE_ROOT} ${ACE_ROOT})
 set(ENV{TAO_ROOT} ${TAO_ROOT})
-set(QTDIR ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
-#set(QTDIR "C:\\local\\Qt\\5.12.0\\msvc2017_64")
-set(ENV{QTDIR} ${QTDIR})
-
 set(ACE_SOURCE_PATH ${ACE_ROOT}/ace)
 set(TAO_SOURCE_PATH ${TAO_ROOT}/tao)
+
+set(QTDIR ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
+set(ENV{QTDIR} ${QTDIR})
 
 set(INSTALLED_PATH ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET})
 if(${CMAKE_BUILD_TYPE} MATCHES "^Debug$")
@@ -38,6 +37,8 @@ vcpkg_download_distfile(ARCHIVE
     URLS "http://github.com/DOCGroup/ACE_TAO/releases/download/ACE%2BTAO-6_5_5/ACE+TAO-src-6.5.5.zip"
     FILENAME ACE+TAO-src-6.5.5.zip
     SHA512 888295877d498b85168cea7b199aba4805b920e9e9f3e65865e3190e5b00b1574c3b941b4a76bc7ef4c5d21d3dc03865cbc6f5286fea4c37643390fb211c76a2
+    PATCHES
+        qcoreapplication.patch
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
@@ -45,13 +46,6 @@ vcpkg_extract_source_archive(${ARCHIVE})
 vcpkg_find_acquire_program(PERL)
 get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
-
-set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
-FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
-STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/bin/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
-SET(QT5_CORE_MPB_DATA ${NEW_QT5_CORE_MPB_DATA})
-STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
-FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
 
 
 if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
@@ -67,6 +61,9 @@ endif()
 if(NOT VCPKG_CMAKE_SYSTEM_NAME)
   set(LIB_RELEASE_SUFFIX .lib)
   set(LIB_DEBUG_SUFFIX d.lib)
+  set(DLL_RELEASE_SUFFIX .dll)
+  set(DLL_DEBUG_SUFFIX d.dll)
+  set(LIB_PREFIX)
   if(VCPKG_PLATFORM_TOOLSET MATCHES "v142")
     set(SOLUTION_TYPE vs2019)
   elseif(VCPKG_PLATFORM_TOOLSET MATCHES "v141")
@@ -81,15 +78,47 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(DLL_DECORATOR)
   set(LIB_RELEASE_SUFFIX .a)
   set(LIB_DEBUG_SUFFIX .a)
+  set(DLL_RELEASE_SUFFIX)
+  set(DLL_DEBUG_SUFFIX)
   set(LIB_PREFIX lib)
   set(SOLUTION_TYPE gnuace)
   file(WRITE ${ACE_SOURCE_PATH}/config.h "#include \"ace/config-linux.h\"")
   file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)include/makeinclude/platform_linux.GNU")
 endif()
 
+set(FEATURE_FLAGS "")
+if("zlib" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",zlib=1")    
+endif()
+if("ssl" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",ssl=1")    
+endif()
+if("lzo" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",lzo=1")
+endif()
+if("bzip2" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",bzip2=1")
+endif()
+if("mfc" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",nfc=1")
+endif()
+if("xml" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",xml=1")
+endif()
+if("qt5" IN_LIST FEATURES)
+    # Patch QT5 template file
+    set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
+    FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
+    STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/bin/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
+    SET(QT5_CORE_MPB_DATA ${NEW_QT5_CORE_MPB_DATA})
+    STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
+    FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
+    string(APPEND FEATURE_FLAGS ",qt5=1")
+endif()
+
 # Invoke mwc.pl to generate the necessary solution and project files
 vcpkg_execute_required_process(
-    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,boost=1,mfc=0,ace_for_tao=0,ace_inline=0,ssl=1,openssl11=0,qt5=1,zlib=1 -use_env -expand_vars
+    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,ace_for_tao=0,ace_inline=0,openssl11=0${FEATURE_FLAGS} -use_env -expand_vars
     WORKING_DIRECTORY ${TAO_ROOT}
     LOGNAME mwc-tao-${TARGET_TRIPLET}
 )
@@ -106,7 +135,7 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
   ENDIF ()
   vcpkg_execute_required_process(
     COMMAND make
-    WORKING_DIRECTORY ${ACE_ROOT}/ace
+    WORKING_DIRECTORY ${TAO_ROOT}
     LOGNAME make-${TARGET_TRIPLET}
   )
 endif()
@@ -141,8 +170,8 @@ function(install_libraries SOURCE_PATH LIBRARIES)
 		
 		if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
 			# Install the DLL files
-			file(INSTALL ${LIB_PATH}/${LIBRARY}d.dll DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
-			file(INSTALL ${LIB_PATH}/${LIBRARY}.dll DESTINATION ${CURRENT_PACKAGES_DIR}/bin)
+			file(INSTALL ${LIB_PATH}/${LIBRARY}${DLL_DEBUG_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
+			file(INSTALL ${LIB_PATH}/${LIBRARY}${DLL_RELEASE_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/bin)
 		endif()
 		# Install the lib files
 		file(INSTALL ${LIB_PATH}/${LIB_PREFIX}${LIBRARY}${DLL_DECORATOR}${LIB_DEBUG_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib)
@@ -151,8 +180,8 @@ function(install_libraries SOURCE_PATH LIBRARIES)
 endfunction()
 
 set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_HTBP" "ACE_INet"
-    "ACE_INet_SSL" "ACE_Monitor_Control" "ACE_QoS" "ACE_QtReactor" "ACE_RLECompression" "ACE_RMCast"
-	"ACE_SSL" "ACE_TMCast" "ACEXML" "ACEXML_Parser" "Kokyu" "TAO" "TAO_AnyTypeCode" "TAO_Async_ImR_Client_IDL"
+    "ACE_Monitor_Control" "ACE_QoS" "ACE_RLECompression" "ACE_RMCast"
+	"ACE_TMCast" "ACEXML" "ACEXML_Parser" "Kokyu" "TAO" "TAO_AnyTypeCode" "TAO_Async_ImR_Client_IDL"
 	"TAO_Async_IORTable" "TAO_AV" "TAO_BiDirGIOP" "TAO_Catior_i" "TAO_CodecFactory" "TAO_Codeset" 
 	"TAO_Compression" "TAO_CosConcurrency" "TAO_CosConcurrency_Serv" "TAO_CosConcurrency_Skel" "TAO_CosEvent"
 	"TAO_CosEvent_Serv"  "TAO_CosEvent_Skel" "TAO_CosLifeCycle" "TAO_CosLifeCycle_Skel" "TAO_CosLoadBalancing"
@@ -168,11 +197,22 @@ set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_
 	"TAO_IDL_FE" "TAO_IFR_BE" "TAO_IFR_Client" "TAO_IFR_Client_skel" "TAO_ImR_Activator_IDL" "TAO_ImR_Client"
 	"TAO_ImR_Locator_IDL" "TAO_IORInterceptor" "TAO_IORManip" "TAO_IORTable" "TAO_Messaging" "TAO_Monitor"
 	"TAO_Notify_Service" "TAO_ObjRefTemplate" "TAO_PI" "TAO_PI_Server" "TAO_PortableGroup" "TAO_PortableServer"
-	"TAO_QtResource" "TAO_RLECompressor" "TAO_RT_Notification" "TAO_RTCORBA" "TAO_RTEvent" "TAO_RTEvent_Skel"
+	 "TAO_RLECompressor" "TAO_RT_Notification" "TAO_RTCORBA" "TAO_RTEvent" "TAO_RTEvent_Skel"
 	"TAO_RTEventLogAdmin" "TAO_RTEventLogAdmin_Skel" "TAO_RTPortableServer" "TAO_RTSched" "TAO_RTScheduler"
-	"TAO_Security" "TAO_SmartProxies" "TAO_SSLIOP" "TAO_Strategies" "TAO_Svc_Utils" "TAO_TC" "TAO_TC_IIOP"
-	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" "TAO_ZIOP" "TAO_ZlibCompressor")
+	"TAO_Security" "TAO_SmartProxies"  "TAO_Strategies" "TAO_Svc_Utils" "TAO_TC" "TAO_TC_IIOP"
+	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" )
 install_libraries(${ACE_ROOT} "${ACE_TAO_LIBRARIES}")
+
+
+if("ssl" IN_LIST FEATURES)
+list(APPEND ACE_TAO_LIBRARIES "ACE_INet_SSL" "ACE_SSL" "TAO_SSLIOP")
+endif()   
+if("zlib" IN_LIST FEATURES)
+list(APPEND ACE_TAO_LIBRARIES "TAO_ZIOP" "TAO_ZlibCompressor")
+endif()   
+if("qt5" IN_LIST FEATURES)
+list(APPEND ACE_TAO_LIBRARIES "ACE_QtReactor" "TAO_QtResource")
+endif()   
 
 
 # Install executables
