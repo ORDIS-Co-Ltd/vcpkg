@@ -1,16 +1,8 @@
-if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
-    message(FATAL_ERROR "${PORT} does not currently support UWP")
-endif()
+#if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
+#    message(FATAL_ERROR "${PORT} does not currently support UWP")
+#endif()
 
 include(vcpkg_common_functions)
-
-if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
-    message(FATAL_ERROR "ARM is currently not supported.")
-elseif (TRIPLET_SYSTEM_ARCH MATCHES "x86")
-    set(MSBUILD_PLATFORM "Win32")
-else ()
-    set(MSBUILD_PLATFORM ${TRIPLET_SYSTEM_ARCH})
-endif()
 
 set(ACE_ROOT ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers)
 set(TAO_ROOT ${ACE_ROOT}/tao)
@@ -42,6 +34,8 @@ vcpkg_apply_patches(
     PATCHES
         "${CMAKE_CURRENT_LIST_DIR}/qtcoreapplication.patch"
         "${CMAKE_CURRENT_LIST_DIR}/bzip2.patch"
+        "${CMAKE_CURRENT_LIST_DIR}/mpc-arm.patch"
+        "${CMAKE_CURRENT_LIST_DIR}/stacktrace-arm.patch"
 )
 
 
@@ -57,7 +51,14 @@ if(NOT VCPKG_CMAKE_SYSTEM_NAME)
     file(WRITE ${ACE_SOURCE_PATH}/config.h "#include \"ace/config-windows.h\"\n#define ACE_NO_INLINE")
 elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
     file(WRITE ${ACE_SOURCE_PATH}/config.h "#include \"ace/config-linux.h\"")
-    file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)include/makeinclude/platform_linux.GNU")
+    file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)/include/makeinclude/platform_linux.GNU")
+elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    #set(ENV{DYLD_LIBRARY_PATH} ${ACE_ROOT}/ace:${ACE_ROOT}/lib)
+    #set(ENV{MACOSX_DEPLOYMENT_TARGET} 10.4)
+    file(WRITE ${ACE_SOURCE_PATH}/config.h "#include \"ace/config-macosx.h\"")
+    file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)/include/makeinclude/platform_macosx.GNU")
+elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
+    message(FATAL_ERROR "${PORT} does not currently support UWP.")
 endif()
 
 if(NOT VCPKG_CMAKE_SYSTEM_NAME)
@@ -71,7 +72,7 @@ if(NOT VCPKG_CMAKE_SYSTEM_NAME)
   else()
     set(SOLUTION_TYPE vc14)
   endif()
-elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux" OR VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(SOLUTION_TYPE gnuace)
 endif()
 
@@ -97,7 +98,7 @@ else()
     list(APPEND ACE_FEATURE_LIST "ssl=0")
 endif()
 if("qt5" IN_LIST FEATURES)
-    set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
+    set(QT5_CORE_MPB_PATH "${ACE_ROOT}/MPC/config/qt5_core.mpb")
     FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
     STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/bin/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
     SET(QT5_CORE_MPB_DATA ${NEW_QT5_CORE_MPB_DATA})
@@ -134,16 +135,28 @@ string(PREPEND ACE_FEATURES ",")
 #
 ###################################################
 
+
+if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
+    set(MSBUILD_PLATFORM "ARM")
+elseif (TRIPLET_SYSTEM_ARCH MATCHES "arm64")
+    set(MSBUILD_PLATFORM "ARM64")
+elseif (TRIPLET_SYSTEM_ARCH MATCHES "x86")
+    set(MSBUILD_PLATFORM "Win32")
+else ()
+    set(MSBUILD_PLATFORM ${TRIPLET_SYSTEM_ARCH})
+endif()
+
+
 # Acquire Perl and add it to PATH (for execution of MPC)
 vcpkg_find_acquire_program(PERL)
 get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
 
 if(BUILD_TAO)
-    set(WORKSPACE "tao_ace")
+    set(WORKSPACE "TAO_ACE")
     set(WORKING_DIR ${TAO_ROOT})
 else()
-    set(WORKSPACE "ace")
+    set(WORKSPACE "ACE")
     set(WORKING_DIR ${ACE_ROOT})
 endif()
 
@@ -165,7 +178,7 @@ if(NOT VCPKG_CMAKE_SYSTEM_NAME)
     vcpkg_build_msbuild(PROJECT_PATH "${WORKING_DIR}/${WORKSPACE}.sln" PLATFORM ${MSBUILD_PLATFORM} USE_VCPKG_INTEGRATION)
 endif()
 
-if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux" OR VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   FIND_PROGRAM(MAKE make)
   IF (NOT MAKE)
     MESSAGE(FATAL_ERROR "MAKE not found")
@@ -179,6 +192,8 @@ endif()
 #   Installation
 #
 ###################################################
+
+
 
 if(NOT VCPKG_CMAKE_SYSTEM_NAME)
   set(LIB_RELEASE_SUFFIX .lib)
@@ -195,6 +210,13 @@ elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(LIB_DEBUG_SUFFIX .a)
   set(DLL_RELEASE_SUFFIX)
   set(DLL_DEBUG_SUFFIX)
+  set(LIB_PREFIX lib)
+elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(DLL_DECORATOR)
+  set(LIB_RELEASE_SUFFIX .a)
+  set(LIB_DEBUG_SUFFIX .a)
+  set(DLL_RELEASE_SUFFIX .dylib)
+  set(DLL_DEBUG_SUFFIX .dylib)
   set(LIB_PREFIX lib)
 endif()
 
@@ -292,10 +314,12 @@ install_tao_executables(${ACE_ROOT}/bin "tao_nsdel")
 install_tao_executables(${ACE_ROOT}/bin "tao_nsgroup")
 install_tao_executables(${ACE_ROOT}/bin "tao_nslist")
 
-file(INSTALL ${ACE_ROOT}/lib/ACEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
-if(BUILD_TAO)
-    file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_FEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
-    file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_BEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
+    file(INSTALL ${ACE_ROOT}/lib/ACEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+    if(BUILD_TAO)
+        file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_FEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+        file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_BEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+    endif()
 endif()
 
 # Handle copyright
