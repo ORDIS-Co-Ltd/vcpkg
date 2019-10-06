@@ -1,14 +1,31 @@
 Source: ace
 Version: 6.5.6
-Homepage: https://www.dre.vanderbilt.edu/~schmidt/ACE.html
 Description: The ADAPTIVE Communication Environment
+Homepage: http://www.dre.vanderbilt.edu/~schmidt/TAO.html
 
 Feature: wchar
-Description: Enable extra wide char functions in ACE
+Description: Enable extra wide char functions
+
+Feature: tao-zlib
+Build-Depends: zlib
+Description: Enable zlib support for TAO
 
 Feature: ssl
-Description: Enable SSL/TLS features in ACE
+Description: Enable SSL/TLS features
 Build-Depends: openssl
 
+Feature: qt5
+Build-Depends: qt5-base
+Description: Enable Qt5 support
+
+Feature: tao-bzip2
+Build-Depends: bzip2
+Description: Enable bzip2 support for TAO
+
+Feature: mfc
+Build-Depends: atlmfc
+Description: Enable MFC support
+
 Feature: xml
-Description: Enable XML features in ACE
+Description: Enable XML features
+
