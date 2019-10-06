@@ -16,8 +16,6 @@ if(${CMAKE_BUILD_TYPE} MATCHES "^Debug$")
 set(INSTALLED_PATH ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug)
 endif()
 
-set(ENV{BOOST_ROOT} ${INSTALLED_PATH})
-
 vcpkg_download_distfile(ARCHIVE
     URLS "http://github.com/DOCGroup/ACE_TAO/releases/download/ACE%2BTAO-6_5_6/ACE+TAO-src-6.5.6.tar.gz"
     FILENAME ACE+TAO-src-6.5.6.tar.gz
@@ -78,27 +76,34 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
   file(WRITE ${ACE_ROOT}/include/makeinclude/platform_macros.GNU "include $(ACE_ROOT)include/makeinclude/platform_linux.GNU")
 endif()
 
-set(FEATURE_FLAGS "")
+###################################################
+#
+#   Generate features string
+#
+###################################################
+
+
+if("wchar" IN_LIST FEATURES)
+    list(APPEND ACE_FEATURE_LIST "uses_wchar=1")
+else()
+    list(APPEND ACE_FEATURE_LIST "uses_wchar=0")
+endif()
+if("xml" IN_LIST FEATURES)
+    list(APPEND ACE_FEATURE_LIST "xml=1")
+else()
+    list(APPEND ACE_FEATURE_LIST "xml=0")
+endif()
 if("zlib" IN_LIST FEATURES)
-    set(ENV{ZLIB_ROOT} ${INSTALLED_PATH})
-    string(APPEND FEATURE_FLAGS ",zlib=1")    
+    list(APPEND ACE_FEATURE_LIST "zlib=1")
+else()
+    list(APPEND ACE_FEATURE_LIST "zlib=0")
 endif()
 if("ssl" IN_LIST FEATURES)
-    set(ENV{SSL_ROOT} ${INSTALLED_PATH})
-    string(APPEND FEATURE_FLAGS ",ssl=1")    
-endif()
-if("bzip2" IN_LIST FEATURES)
-    set(ENV{BZIP2_ROOT} ${INSTALLED_PATH})
-    string(APPEND FEATURE_FLAGS ",bzip2=1")
-endif()
-if("mfc" IN_LIST FEATURES)
-    if(VCPKG_CMAKE_SYSTEM_NAME)
-        message(FATAL_ERROR "MFC is not available on platforms other than Windows.")
-    endif()
-    string(APPEND FEATURE_FLAGS ",mfc=1")
+    list(APPEND ACE_FEATURE_LIST "ssl=1")
+else()
+    list(APPEND ACE_FEATURE_LIST "ssl=0")
 endif()
 if("qt5" IN_LIST FEATURES)
-    # Patch QT5 template file
     set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
     FILE(READ ${QT5_CORE_MPB_PATH} QT5_CORE_MPB_DATA)
     STRING(REGEX REPLACE "QT5_BINDIR\\)\\/" "QTDIR)/tools/qt5/bin/" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
@@ -106,24 +111,53 @@ if("qt5" IN_LIST FEATURES)
     STRING(REGEX REPLACE "libpaths \\+\\= \\$\\(QT5_LIBDIR\\)" "libpaths += $(QT5_LIBDIR) ${VCPKG_ROOT_DIR}/installed/${TARGET_TRIPLET}/debug/lib" NEW_QT5_CORE_MPB_DATA ${QT5_CORE_MPB_DATA})
     FILE(WRITE ${QT5_CORE_MPB_PATH} "${NEW_QT5_CORE_MPB_DATA}")
     set(ENV{QTDIR} ${INSTALLED_PATH})
-    string(APPEND FEATURE_FLAGS ",qt5=1")
+    list(APPEND ACE_FEATURE_LIST "qt5=1")
+else()
+    list(APPEND ACE_FEATURE_LIST "qt5=0")
 endif()
+if("bzip2" IN_LIST FEATURES)
+    set(ENV{BZIP2_ROOT} ${INSTALLED_PATH})
+    list(APPEND ACE_FEATURE_LIST "bzip2=1")
+else()
+    list(APPEND ACE_FEATURE_LIST "bzip2=0")
+endif()
+if("mfc" IN_LIST FEATURES)
+    if(VCPKG_CMAKE_SYSTEM_NAME)
+        message(FATAL_ERROR "MFC is not available on platforms other than Windows.")
+    endif()
+    list(APPEND ACE_FEATURE_LIST "mfc=1")
+else()
+    list(APPEND ACE_FEATURE_LIST "mfc=0")
+endif()
+list(JOIN ACE_FEATURE_LIST "," ACE_FEATURES)
 
+message(${ACE_FEATURES})
 
 if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
   set(MPC_STATIC_FLAG -static)
 endif()
 
-# Invoke mwc.pl to generate the necessary solution and project files
+###################################################
+#
+#   Invoke mwc to generate solution / make files
+#
+###################################################
+
 vcpkg_execute_required_process(
-    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,ace_for_tao=0,ace_inline=0,openssl11=0${FEATURE_FLAGS} -use_env -expand_vars
+    COMMAND ${PERL} ${ACE_ROOT}/bin/mwc.pl -type ${SOLUTION_TYPE} tao_ace.mwc ${MPC_STATIC_FLAG} -features stl=1,ace_for_tao=0,ace_inline=0"${ACE_FEATURES}" -use_env -expand_vars
     WORKING_DIRECTORY ${TAO_ROOT}
     LOGNAME mwc-tao-${TARGET_TRIPLET}
 )
 
-# Build 
+###################################################
+#
+#   Build
+#
+###################################################
+
+# Build for Windows
 if(NOT VCPKG_CMAKE_SYSTEM_NAME) 
-	vcpkg_build_msbuild(PROJECT_PATH ${TAO_ROOT}/tao_ace.sln PLATFORM ${MSBUILD_PLATFORM})
+	vcpkg_build_msbuild(PROJECT_PATH ${TAO_ROOT}/tao_ace.sln PLATFORM ${MSBUILD_PLATFORM} USE_VCPKG_INTEGRATION)
 endif()
 
 if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -131,12 +165,14 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
   IF (NOT MAKE)
     MESSAGE(FATAL_ERROR "MAKE not found")
   ENDIF ()
-  vcpkg_execute_required_process(
-    COMMAND make
-    WORKING_DIRECTORY ${TAO_ROOT}
-    LOGNAME make-${TARGET_TRIPLET}
-  )
+  vcpkg_execute_required_process(COMMAND make WORKING_DIRECTORY ${TAO_ROOT} LOGNAME make-${TARGET_TRIPLET})
 endif()
+
+###################################################
+#
+#   Installation
+#
+###################################################
 
 # Install include files
 function(install_includes SOURCE_PATH SUBDIRECTORIES INCLUDE_DIR)
@@ -159,7 +195,6 @@ set(ORBSVCS_INCLUDE_FOLDERS "." "AV" "Concurrency" "CosEvent" "ESF" "FaultTolera
     "LifeCycle" "LoadBalancing" "Log" "Naming" "Naming/FaultTolerant" "Notify" "Notify/Any" "Notify/MonitorControl" "Notify/MonitorControlExt" "Notify/Sequence"
 	"Notify/Structured" "PortableGroup" "Property" "Sched" "Security" "SSLIOP" "Time" "Trader")
 install_includes(${TAO_ROOT}/orbsvcs/orbsvcs "${ORBSVCS_INCLUDE_FOLDERS}" "orbsvcs")
-
 
 # Install libraries
 function(install_libraries SOURCE_PATH LIBRARIES)
@@ -209,7 +244,6 @@ set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_
 	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" "TAO_ZIOP" "ACE_INet_SSL" "ACE_SSL" "TAO_SSLIOP" 
     "TAO_ZlibCompressor" "ACE_QtReactor" "TAO_QtResource")
 install_libraries(${ACE_ROOT} "${ACE_TAO_LIBRARIES}")
-
 
 
 # Install executables

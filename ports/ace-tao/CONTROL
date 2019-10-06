@@ -4,33 +4,31 @@ Description: The ACE ORB
 Maintainer: Benjamin Oldenburg <benjamin.oldenburg@ordis.co.th>
 Homepage: http://www.dre.vanderbilt.edu/~schmidt/TAO.html
 
+Feature: wchar
+Description: Enable extra wide char functions
+
 Feature: zlib
 Build-Depends: zlib
-Description: With zlib support
+Description: Enable zlib support
 
 Feature: ssl
+Description: Enable SSL/TLS features
 Build-Depends: openssl
-Description: With SSL support
 
 Feature: qt5
 Build-Depends: qt5-base
-Description: For QtReactor
-
-Feature: lzo
-Build-Depends: lzo
-Description: lzo support
+Description: Enable Qt5 support (builds QtReactor and QtResource)
 
 Feature: bzip2
 Build-Depends: bzip2
-Description: bzip2 support
+Description: Enable bzip2 support
 
 Feature: mfc
 Build-Depends: atlmfc
-Description: MFC support
+Description: Enable MFC support
 
-Feature: xerces
-Build-Depends: xerces-c[xmlch_wchar,icu]
-Description: XML support with xerces-c
+Feature: xml
+Description: Enable XML features
 
 
 
