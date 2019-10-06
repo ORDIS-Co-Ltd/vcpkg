@@ -52,8 +52,8 @@ build-linux:
   - ./bootstrap-vcpkg.sh
   - export VCPKG_DEFAULT_TRIPLET=$TRIPLET
   - ./vcpkg upgrade --no-dry-run
-  - ./vcpkg install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 ace-tao[bzip2,core,qt5,ssl,xml,zlib] --recurse
-  - ./vcpkg export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane ace-tao[bzip2,core,qt5,ssl,xml,zlib] --zip --output=vcpkg-$TRIPLET
+  - ./vcpkg install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 ace[tao-zlib,tao-bzip2,ssl,qt5,xml] --recurse
+  - ./vcpkg export boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 qwt x-plane ace[tao-zlib,tao-bzip2,ssl,qt5,xml] --zip --output=vcpkg-$TRIPLET
   cache:
     key: vcpkg_gcc_$TRIPLET
     paths:
