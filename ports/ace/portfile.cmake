@@ -1,6 +1,9 @@
-#if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
-#    message(FATAL_ERROR "${PORT} does not currently support UWP")
-#endif()
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
+    message(FATAL_ERROR "${PORT} does not currently support UWP")
+elseif (TRIPLET_SYSTEM_ARCH MATCHES "arm64")
+    message(FATAL_ERROR "${PORT} does not currently support ARM64")
+
+endif()
 
 include(vcpkg_common_functions)
 
