@@ -27,17 +27,18 @@ endif()
 set(ENV{BOOST_ROOT} ${INSTALLED_PATH})
 
 
-
-
 vcpkg_download_distfile(ARCHIVE
     URLS "http://github.com/DOCGroup/ACE_TAO/releases/download/ACE%2BTAO-6_5_5/ACE+TAO-src-6.5.5.zip"
     FILENAME ACE+TAO-src-6.5.5.zip
     SHA512 888295877d498b85168cea7b199aba4805b920e9e9f3e65865e3190e5b00b1574c3b941b4a76bc7ef4c5d21d3dc03865cbc6f5286fea4c37643390fb211c76a2
-    PATCHES
-        qtcoreapplication.patch
-        bzip2.patch
 )
 vcpkg_extract_source_archive(${ARCHIVE})
+vcpkg_apply_patches(
+    SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers
+    PATCHES
+        "${CMAKE_CURRENT_LIST_DIR}/qtcoreapplication.patch"
+        "${CMAKE_CURRENT_LIST_DIR}/bzip2.patch"
+)
 
 # Acquire Perl and add it to PATH (for execution of MPC)
 vcpkg_find_acquire_program(PERL)
