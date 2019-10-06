@@ -48,7 +48,7 @@ build-linux:
   variables:
     GIT_STRATEGY: fetch
     TRIPLET: "x64-linux"
-  stage: build_not
+  #stage: build
   script:
   - ./bootstrap-vcpkg.sh
   - export VCPKG_DEFAULT_TRIPLET=$TRIPLET
