@@ -1,7 +1,8 @@
 Source: ace-tao
 Version: 2.5.5
 Description: The ACE ORB
-Build-Depends: openssl,qt5-base
+Maintainer: Benjamin Oldenburg <benjamin.oldenburg@ordis.co.th>
+Homepage: http://www.dre.vanderbilt.edu/~schmidt/TAO.html
 
 Feature: zlib
 Build-Depends: zlib
@@ -14,6 +15,22 @@ Description: With SSL support
 Feature: qt5
 Build-Depends: qt5-base
 Description: For QtReactor
+
+Feature: lzo
+Build-Depends: lzo
+Description: lzo support
+
+Feature: bzip2
+Build-Depends: bzip2
+Description: bzip2 support
+
+Feature: mfc
+Build-Depends: atlmfc
+Description: MFC support
+
+Feature: xml
+Build-Depends: xerces-c
+Description: XML support
 
 
 

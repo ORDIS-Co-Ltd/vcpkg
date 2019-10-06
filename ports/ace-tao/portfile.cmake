@@ -93,6 +93,18 @@ endif()
 if("ssl" IN_LIST FEATURES)
     string(APPEND FEATURE_FLAGS ",ssl=1")    
 endif()
+if("lzo" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",lzo=1")
+endif()
+if("bzip2" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",bzip2=1")
+endif()
+if("mfc" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",nfc=1")
+endif()
+if("xml" IN_LIST FEATURES)
+    string(APPEND FEATURE_FLAGS ",xml=1")
+endif()
 if("qt5" IN_LIST FEATURES)
     # Patch QT5 template file
     set(QT5_CORE_MPB_PATH "${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/MPC/config/qt5_core.mpb")
@@ -168,8 +180,8 @@ function(install_libraries SOURCE_PATH LIBRARIES)
 endfunction()
 
 set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_HTBP" "ACE_INet"
-    "ACE_INet_SSL" "ACE_Monitor_Control" "ACE_QoS" "ACE_QtReactor" "ACE_RLECompression" "ACE_RMCast"
-	"ACE_SSL" "ACE_TMCast" "ACEXML" "ACEXML_Parser" "Kokyu" "TAO" "TAO_AnyTypeCode" "TAO_Async_ImR_Client_IDL"
+    "ACE_Monitor_Control" "ACE_QoS" "ACE_RLECompression" "ACE_RMCast"
+	"ACE_TMCast" "ACEXML" "ACEXML_Parser" "Kokyu" "TAO" "TAO_AnyTypeCode" "TAO_Async_ImR_Client_IDL"
 	"TAO_Async_IORTable" "TAO_AV" "TAO_BiDirGIOP" "TAO_Catior_i" "TAO_CodecFactory" "TAO_Codeset" 
 	"TAO_Compression" "TAO_CosConcurrency" "TAO_CosConcurrency_Serv" "TAO_CosConcurrency_Skel" "TAO_CosEvent"
 	"TAO_CosEvent_Serv"  "TAO_CosEvent_Skel" "TAO_CosLifeCycle" "TAO_CosLifeCycle_Skel" "TAO_CosLoadBalancing"
@@ -185,11 +197,22 @@ set(ACE_TAO_LIBRARIES "ACE" "ACE_Compression" "ACE_ETCL" "ACE_ETCL_Parser" "ACE_
 	"TAO_IDL_FE" "TAO_IFR_BE" "TAO_IFR_Client" "TAO_IFR_Client_skel" "TAO_ImR_Activator_IDL" "TAO_ImR_Client"
 	"TAO_ImR_Locator_IDL" "TAO_IORInterceptor" "TAO_IORManip" "TAO_IORTable" "TAO_Messaging" "TAO_Monitor"
 	"TAO_Notify_Service" "TAO_ObjRefTemplate" "TAO_PI" "TAO_PI_Server" "TAO_PortableGroup" "TAO_PortableServer"
-	"TAO_QtResource" "TAO_RLECompressor" "TAO_RT_Notification" "TAO_RTCORBA" "TAO_RTEvent" "TAO_RTEvent_Skel"
+	 "TAO_RLECompressor" "TAO_RT_Notification" "TAO_RTCORBA" "TAO_RTEvent" "TAO_RTEvent_Skel"
 	"TAO_RTEventLogAdmin" "TAO_RTEventLogAdmin_Skel" "TAO_RTPortableServer" "TAO_RTSched" "TAO_RTScheduler"
-	"TAO_Security" "TAO_SmartProxies" "TAO_SSLIOP" "TAO_Strategies" "TAO_Svc_Utils" "TAO_TC" "TAO_TC_IIOP"
-	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" "TAO_ZIOP" "TAO_ZlibCompressor")
+	"TAO_Security" "TAO_SmartProxies"  "TAO_Strategies" "TAO_Svc_Utils" "TAO_TC" "TAO_TC_IIOP"
+	"TAO_TypeCodeFactory" "TAO_Utils" "TAO_Valuetype" )
 install_libraries(${ACE_ROOT} "${ACE_TAO_LIBRARIES}")
+
+
+if("ssl" IN_LIST FEATURES)
+list(APPEND ACE_TAO_LIBRARIES "ACE_INet_SSL" "ACE_SSL" "TAO_SSLIOP")
+endif()   
+if("zlib" IN_LIST FEATURES)
+list(APPEND ACE_TAO_LIBRARIES "TAO_ZIOP" "TAO_ZlibCompressor")
+endif()   
+if("qt5" IN_LIST FEATURES)
+list(APPEND ACE_TAO_LIBRARIES "ACE_QtReactor" "TAO_QtResource")
+endif()   
 
 
 # Install executables
