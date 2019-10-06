@@ -292,10 +292,12 @@ install_tao_executables(${ACE_ROOT}/bin "tao_nsdel")
 install_tao_executables(${ACE_ROOT}/bin "tao_nsgroup")
 install_tao_executables(${ACE_ROOT}/bin "tao_nslist")
 
-file(INSTALL ${ACE_ROOT}/lib/ACEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
-if(BUILD_TAO)
-    file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_FEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
-    file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_BEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
+    file(INSTALL ${ACE_ROOT}/lib/ACEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+    if(BUILD_TAO)
+        file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_FEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+        file(INSTALL ${ACE_ROOT}/lib/TAO_IDL_BEd.dll DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
+    endif()
 endif()
 
 # Handle copyright
