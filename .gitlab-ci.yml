@@ -41,25 +41,3 @@ build-windows:
     - tags
 
 
-build-linux:
-  tags:
-    - gcc
-    - linux
-  variables:
-    GIT_STRATEGY: fetch
-    TRIPLET: "x64-linux"
-  #stage: build
-  script:
-  - ./bootstrap-vcpkg.sh
-  - export VCPKG_DEFAULT_TRIPLET=$TRIPLET
-  - ./vcpkg upgrade --no-dry-run
-  - ./vcpkg install boost curl[ssl,brotli] curlpp jsoncpp libgit2 libpq libpqxx soci[odbc,postgresql,sqlite3] thrift grpc wt cpprestsdk freetds[openssl] google-cloud-cpp icu json-spirit pugixml libharu qt5 --recurse
-  cache:
-    key: vcpkg_gcc_$TRIPLET
-    paths:
-    - packages
-    - downloads
-    - installed
-  after_script:
-  except:
-    - tags
