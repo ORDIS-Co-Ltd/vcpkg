@@ -7,7 +7,7 @@ Feature: wchar
 Description: Enable extra wide char functions
 
 Feature: tao-zlib
-Build-Depends: zlib, ace[tao]
+Build-Depends: zlib, ace-tao[tao]
 Description: Enable zlib support for TAO
 
 Feature: ssl
@@ -19,7 +19,7 @@ Build-Depends: qt5-base
 Description: Enable Qt5 support
 
 Feature: tao-bzip2
-Build-Depends: bzip2, ace[tao]
+Build-Depends: bzip2, ace-tao[tao]
 Description: Enable bzip2 support for TAO
 
 Feature: mfc
