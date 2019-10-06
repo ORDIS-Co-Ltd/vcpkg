@@ -6,26 +6,27 @@ Homepage: http://www.dre.vanderbilt.edu/~schmidt/TAO.html
 Feature: wchar
 Description: Enable extra wide char functions
 
-Feature: tao-zlib
-Build-Depends: zlib
-Description: Enable zlib support for TAO
-
 Feature: ssl
 Description: Enable SSL/TLS features
 Build-Depends: openssl
+
+Feature: xml
+Description: Enable XML features
 
 Feature: qt5
 Build-Depends: qt5-base
 Description: Enable Qt5 support
 
+Feature: tao
+Description: The ACE ORB
+
+Feature: tao-zlib
+Build-Depends: zlib, ace[tao]
+Description: Enable zlib support for TAO
+
 Feature: tao-bzip2
-Build-Depends: bzip2
+Build-Depends: bzip2, ace[tao]
 Description: Enable bzip2 support for TAO
 
-Feature: mfc
-Build-Depends: atlmfc
-Description: Enable MFC support
 
-Feature: xml
-Description: Enable XML features
 
