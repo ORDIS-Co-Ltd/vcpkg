@@ -299,7 +299,7 @@ if(BUILD_TAO)
 endif()
 
 # Handle copyright
-file(COPY ${ACE_ROOT}/COPYING DESTINATION ${CURRENT_PACKAGES_DIR}/share/ace-tao)
+file(COPY ${ACE_ROOT}/COPYING DESTINATION ${CURRENT_PACKAGES_DIR}/share/ace/)
 file(RENAME ${CURRENT_PACKAGES_DIR}/share/ace/COPYING ${CURRENT_PACKAGES_DIR}/share/ace/copyright)
 
 vcpkg_copy_pdbs()
