@@ -1,4 +1,3 @@
-
 include(vcpkg_common_functions)
 
 set(ACE_ROOT ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers)
@@ -289,7 +288,7 @@ function(install_tao_executables SOURCE_PATH EXE_FILE)
         set(EXECUTABLE_SUFFIX "")
     endif()
     if(EXISTS "${ACE_ROOT}/bin/${EXE_FILE}${EXECUTABLE_SUFFIX}")
-        file(COPY ${ACE_ROOT}/bin/${EXE_FILE}${EXECUTABLE_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace-tao)
+        file(COPY ${ACE_ROOT}/bin/${EXE_FILE}${EXECUTABLE_SUFFIX} DESTINATION ${CURRENT_PACKAGES_DIR}/tools/ace)
     endif()
 endfunction()
 
