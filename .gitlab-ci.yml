@@ -12,7 +12,7 @@ build-windows:
   before_script:
     - 'subst Q: (Get-Location); echo ok'
   script:
-    - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat"
+    - Invoke-BatchFile "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat -arch=amd64 -arch=amd64"
     - $physicalBuildPath = Get-Location
     #- 'subst Q: $physicalBuildPath; echo ok'
     - Set-Location Q:\
